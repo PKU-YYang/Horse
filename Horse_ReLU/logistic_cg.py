@@ -9,8 +9,8 @@ import time
 import numpy
 import theano
 import theano.tensor as T
-
-
+from scipy.stats import itemfreq
+theano.config.warn.sum_sum_bug=False
 
 def load_data(trainset, validset, testset):
 
@@ -33,6 +33,9 @@ def load_data(trainset, validset, testset):
         shared_y = theano.shared(numpy.asarray(data_y,
                                                dtype=theano.config.floatX),
                                  borrow=borrow)
+
+        data_index = numpy.concatenate((numpy.array([0]), numpy.cumsum(itemfreq(data_index)[:,1])))
+
         shared_index = theano.shared(numpy.asarray(data_index,
                                                dtype=theano.config.floatX),
                                  borrow=borrow)
@@ -89,7 +92,7 @@ class ConditionalLogisticRegression(object):
 
         self.race_prob = _raw_w / T.reshape(_race_prob_div,[_race_prob_div.shape[0],1])
 
-        self.mean_neg_loglikelihood = None
+        self.mean_neg_loglikelihood = T.fscalar()
 
         self.neg_log_likelihood = None
 
@@ -102,11 +105,11 @@ class ConditionalLogisticRegression(object):
                                    outputs_info=T.as_tensor_variable(numpy.array([0.])),
                                    non_sequences=self.race_prob)
 
-        self.neg_log_likelihood = -_1st_prob[-1] #这个是负的
+        self.neg_log_likelihood = -_1st_prob[-1].ravel() #这个是负的
 
         self.mean_neg_loglikelihood = self.neg_log_likelihood/index.shape[0]
 
-        return self.mean_neg_loglikelihood
+        return T.mean(self.mean_neg_loglikelihood.ravel(), dtype='float32')
 
     def Rsquare(self, index): #rsqaure约大越好，函数返回的值越小越好
 
@@ -115,7 +118,7 @@ class ConditionalLogisticRegression(object):
         return -self.neg_log_likelihood/(T.log(1./index[-1]))
 
 
-def cg_optimization_mnist(n_epochs=50, batch_size=100 ,dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], n_in=27):
+def cg_optimization_mnist(dataset, n_epochs=50, batch_size=100):
 
     #############
     # LOAD DATA #
@@ -128,70 +131,71 @@ def cg_optimization_mnist(n_epochs=50, batch_size=100 ,dataset=['horse_train.csv
 
     batch_size = batch_size    # size of the minibatch
 
-    n_train_batches = len(numpy.unique(train_set_index.eval())) / batch_size
-    n_valid_batches = len(numpy.unique(valid_set_index.eval())) / batch_size
-    n_test_batches = len(numpy.unique(test_set_index.eval())) / batch_size
+    n_train_batches = (len(numpy.unique(train_set_index.eval()))-1) / batch_size #-1是因为多一个零
+    n_valid_batches = (len(numpy.unique(valid_set_index.eval()))-1) / batch_size
+    n_test_batches = (len(numpy.unique(test_set_index.eval()))-1) / batch_size
 
-    n_in = n_in  # number of features in a horse
+    n_in = train_set_x.shape[1].eval()  # number of features in a horse
 
-
+    n_out = 1
     ######################
     # BUILD ACTUAL MODEL #
     ######################
     print '... building the model'
 
 
-    minibatch_offset = T.lscalar()  #i * batch_size for i in xrange(n_train_batches)
+    minibatch = T.lscalar()
     x = T.matrix()
-    y = T.ivector()
     index = T.ivector()
+    #index_all = T.ivector()
 
     #construct symbolic model
-    classifier = ConditionalLogisticRegression(input=x, n_in=27, index=index)
+    classifier = ConditionalLogisticRegression(input=x, n_in=n_in, index=index)
 
     cost = classifier.negative_log_likelihood(index)
 
-    #根据一个Minibatch号码在test数据上计算error
+    #根据一个Minibatch号码在test数据上计算error,这里是rsquare
     test_model = theano.function(
-        [minibatch_offset],
-        classifier.errors(y), #计算test set上的错误率
+        [minibatch],
+        classifier.Rsquare(index), #计算test set上的错误率
         givens={
-            x: test_set_x[minibatch_offset:minibatch_offset + batch_size],
-            y: test_set_y[minibatch_offset:minibatch_offset + batch_size]
+            x: test_set_x[test_set_index[minibatch]:test_set_index[minibatch + batch_size]],  #因为寻址最后一位找不到
+            index: test_set_index[minibatch:(minibatch + batch_size + 1)] - test_set_index[minibatch]
         },
         name="test"
     )
-    #根据一个Minibatch号码在valida数据上计算error
+    #根据一个Minibatch号码在valida数据上计算error,这里是rsquare
     validate_model = theano.function(
-        [minibatch_offset],
-        classifier.errors(y), #计算validate set上的错误率
+        [minibatch],
+        classifier.Rsquare(index), #计算validate set上的错误率
         givens={
-            x: valid_set_x[minibatch_offset: minibatch_offset + batch_size],
-            y: valid_set_y[minibatch_offset: minibatch_offset + batch_size]
+            x: valid_set_x[valid_set_index[minibatch]:valid_set_index[minibatch + batch_size]],
+            index: valid_set_index[minibatch:(minibatch + batch_size + 1)] - valid_set_index[minibatch]
         },
         name="validate"
     )
 
     # 封装一个根据特定minibatch号码计算likelihood cost的函数
     batch_cost = theano.function(
-        [minibatch_offset],
+        [minibatch],
         cost, #计算一个起始点开始接下来batch_size个函数的log-liklihood
         givens={
-            x: train_set_x[minibatch_offset: minibatch_offset + batch_size],
-            y: train_set_y[minibatch_offset: minibatch_offset + batch_size]
+            x: train_set_x[train_set_index[minibatch]:train_set_index[minibatch + batch_size]],
+            index: train_set_index[minibatch:(minibatch + batch_size + 1)] - train_set_index[minibatch]
         },
         name="batch_cost"
     )
 
     # 封装一个根据特定minibatch号码计算gradient的函数
     batch_grad = theano.function(
-        [minibatch_offset],
+        [minibatch],
         T.grad(cost, classifier.theta), #让所有预测对的那个概率加起来尽量的高
         givens={
-            x: train_set_x[minibatch_offset: minibatch_offset + batch_size],
-            y: train_set_y[minibatch_offset: minibatch_offset + batch_size]
+            x: train_set_x[train_set_index[minibatch]:train_set_index[minibatch + batch_size]],
+            index: train_set_index[minibatch:(minibatch + batch_size + 1)] - train_set_index[minibatch]
         },
         name="batch_grad"
+        #,mode="DebugMode"
     )
 
     # 计算train数据上的cost函数
@@ -218,7 +222,7 @@ def cg_optimization_mnist(n_epochs=50, batch_size=100 ,dataset=['horse_train.csv
         validation_losses = [validate_model(i * batch_size) #计算每个batch上的错误率
                              for i in xrange(n_valid_batches)]
         this_validation_loss = numpy.mean(validation_losses)
-        print('validation error %f %%' % (this_validation_loss * 100.,))
+        print('validation R Square %f ' % (1-this_validation_loss,))
 
         # check if it is better then best validation score got until now
         if this_validation_loss < validation_scores[0]:
@@ -251,7 +255,7 @@ def cg_optimization_mnist(n_epochs=50, batch_size=100 ,dataset=['horse_train.csv
             'Optimization complete with best validation score of %f %%, with '
             'test performance %f %%'
         )
-        % (validation_scores[0] * 100., validation_scores[1] * 100.)
+        % (1-validation_scores[0] , 1-validation_scores[1] )
     )
 
     print >> sys.stderr, ('The code for file ' +
@@ -260,7 +264,7 @@ def cg_optimization_mnist(n_epochs=50, batch_size=100 ,dataset=['horse_train.csv
 
 
 if __name__ == '__main__':
-    cg_optimization_mnist(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'],n_in=27)
+    cg_optimization_mnist(n_epochs=50, batch_size=50, dataset=['horse_valid.csv','horse_valid.csv','horse_test.csv'])
 
 
 
