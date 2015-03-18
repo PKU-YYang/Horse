@@ -10,7 +10,8 @@ import numpy
 import theano
 import theano.tensor as T
 from scipy.stats import itemfreq
-theano.config.warn.sum_sum_bug=False
+import scipy.optimize
+#theano.config.warn.sum_sum_bug=False
 
 def load_data(trainset, validset, testset):
 
@@ -50,7 +51,6 @@ def load_data(trainset, validset, testset):
             (test_set_x, test_set_y, test_set_index)]
     return rval
 
-
 class ConditionalLogisticRegression(object):
 
     def __init__(self, input, n_in, index): #input是一个minibatch
@@ -76,11 +76,11 @@ class ConditionalLogisticRegression(object):
         def cumsum_within_group(_start, _index, _race):
             start_point=_index[_start]
             stop_point=_index[_start+1]
-            return T.sum(_race[start_point:stop_point])
+            return T.sum(_race[start_point:stop_point], dtype='float32')
 
         _cumsum, _ = theano.scan(cumsum_within_group,
-                                    sequences=[T.arange(index.shape[0]-1)],
-                                    non_sequences=[index, _raw_w])
+                                 sequences=[T.arange(index.shape[0]-1)],
+                                 non_sequences=[index, _raw_w])
 
 
         #构造一个rep(cumsum,times)的序列，目的是直接相除从而得到每匹马的概率
@@ -88,21 +88,33 @@ class ConditionalLogisticRegression(object):
                                 sequences=[T.arange(index.shape[0]-1)],
                                 non_sequences=index)
 
-        _race_prob_div = T.repeat(_cumsum.ravel(), _times)
+        _output_info = T.alloc(_cumsum.ravel()[0],_times[0])
+        _race_prob_div, _ = theano.scan(fn=lambda t, _pre, prob, time: T.concatenate((_pre, T.alloc(prob[t], time[t]))),
+                                        sequences = [T.arange(_times.shape[0])[1:]],
+                                        outputs_info = _output_info,
+                                        non_sequences = [_cumsum.ravel(), _times])
+
+        _race_prob_div = _race_prob_div[-1]
 
         self.race_prob = _raw_w / T.reshape(_race_prob_div,[_race_prob_div.shape[0],1])
 
-        self.mean_neg_loglikelihood = T.fscalar()
-
-        self.neg_log_likelihood = None
-
-        self.r_square = None
+        # self.mean_neg_loglikelihood = None
+        #
+        # self.neg_log_likelihood = None
+        #
+        # self.r_square = None
+        #
+        # self.r_error = None
 
     def negative_log_likelihood(self, index):
 
+        _output_info = T.as_tensor_variable(numpy.array([0.]))
+
+        _output_info = T.unbroadcast(_output_info, 0)
+
         _1st_prob, _ = theano.scan(fn= lambda _1st, prior_reuslt, _prob: prior_reuslt+T.log(_prob[_1st]),
                                    sequences=[index[:-1]],
-                                   outputs_info=T.as_tensor_variable(numpy.array([0.])),
+                                   outputs_info=_output_info, #特别注意：output_info一定不能用numpy组成的序列，用shared或者禁掉broadcast
                                    non_sequences=self.race_prob)
 
         self.neg_log_likelihood = -_1st_prob[-1].ravel() #这个是负的
@@ -115,10 +127,12 @@ class ConditionalLogisticRegression(object):
 
         self.r_square = 1+self.neg_log_likelihood/(T.log(1./index[-1]))
 
-        return -self.neg_log_likelihood/(T.log(1./index[-1]))
+        self.r_error = -self.neg_log_likelihood/(T.log(1./index[-1]))
 
+        return T.mean(self.r_error.ravel(), dtype='float32')
+        #return -self.neg_log_likelihood/(T.log(1./index[-1]))
 
-def cg_optimization_mnist(dataset, n_epochs=50, batch_size=100):
+def cg_optimization_horse(dataset, n_epochs=50, batch_size=100):
 
     #############
     # LOAD DATA #
@@ -152,7 +166,7 @@ def cg_optimization_mnist(dataset, n_epochs=50, batch_size=100):
     #construct symbolic model
     classifier = ConditionalLogisticRegression(input=x, n_in=n_in, index=index)
 
-    cost = classifier.negative_log_likelihood(index)
+    cost = classifier.negative_log_likelihood(index).mean()
 
     #根据一个Minibatch号码在test数据上计算error,这里是rsquare
     test_model = theano.function(
@@ -189,7 +203,7 @@ def cg_optimization_mnist(dataset, n_epochs=50, batch_size=100):
     # 封装一个根据特定minibatch号码计算gradient的函数
     batch_grad = theano.function(
         [minibatch],
-        T.grad(cost, classifier.theta), #让所有预测对的那个概率加起来尽量的高
+        T.grad(cost, classifier.theta), #这句有问题
         givens={
             x: train_set_x[train_set_index[minibatch]:train_set_index[minibatch + batch_size]],
             index: train_set_index[minibatch:(minibatch + batch_size + 1)] - train_set_index[minibatch]
@@ -238,13 +252,13 @@ def cg_optimization_mnist(dataset, n_epochs=50, batch_size=100):
     ###############
 
     # using scipy conjugate gradient optimizer
-    import scipy.optimize
+
     print ("Optimizing using scipy.optimize.fmin_cg...")
     start_time = time.clock()
-    best_w_b = scipy.optimize.fmin_cg(
+    best_w_b = scipy.optimize.fmin_cg( #在train_set上每train一个minibatch就测试在测试集上的error，存那个最低的，测试函数就是这里的callback
         f=train_fn,
         x0=numpy.zeros((n_in + 1) * n_out, dtype=x.dtype),
-        fprime=train_fn_grad,
+        fprime=train_fn_grad, #存gradient
         callback=callback,
         disp=0,
         maxiter=n_epochs
@@ -264,7 +278,7 @@ def cg_optimization_mnist(dataset, n_epochs=50, batch_size=100):
 
 
 if __name__ == '__main__':
-    cg_optimization_mnist(n_epochs=50, batch_size=50, dataset=['horse_valid.csv','horse_valid.csv','horse_test.csv'])
+    cg_optimization_horse(n_epochs=50, batch_size=50, dataset=['horse_valid.csv','horse_valid.csv','horse_test.csv'])
 
 
 
