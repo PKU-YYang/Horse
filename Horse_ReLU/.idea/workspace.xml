@@ -36,27 +36,27 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="logistic_cg.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="logistic_cg.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/logistic_cg.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-112.566666" vertical-offset="238" max-vertical-offset="3705">
-              <caret line="330" column="0" selection-start-line="330" selection-start-column="0" selection-end-line="330" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.14285715" vertical-offset="750" max-vertical-offset="2730">
+              <caret line="146" column="23" selection-start-line="146" selection-start-column="23" selection-end-line="146" selection-end-column="23" />
               <folding>
-                <element signature="e#24#974#1" expanded="false" />
-                <element signature="e#1014#1023#0" expanded="true" />
-                <element signature="e#1154#2790#0" expanded="false" />
-                <element signature="e#2843#3158#1" expanded="false" />
-                <element signature="e#5489#5864#1" expanded="false" />
+                <element signature="e#63#72#0" expanded="true" />
+                <element signature="e#201#1724#0" expanded="false" />
+                <element signature="e#1846#3260#0" expanded="false" />
+                <element signature="e#3317#3806#0" expanded="false" />
+                <element signature="e#3871#3997#0" expanded="false" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="test.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="test.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.6983806" vertical-offset="825" max-vertical-offset="1350">
-              <caret line="78" column="26" selection-start-line="78" selection-start-column="0" selection-end-line="79" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="915" max-vertical-offset="1455">
+              <caret line="91" column="41" selection-start-line="91" selection-start-column="41" selection-end-line="91" selection-end-column="41" />
               <folding>
                 <element signature="e#53#73#0" expanded="true" />
               </folding>
@@ -71,8 +71,8 @@
       <list>
         <option value="$PROJECT_DIR$/adult_dataset.py" />
         <option value="$PROJECT_DIR$/data_wrapping.py" />
-        <option value="$PROJECT_DIR$/logistic_cg.py" />
         <option value="$PROJECT_DIR$/test.py" />
+        <option value="$PROJECT_DIR$/logistic_cg.py" />
       </list>
     </option>
   </component>
@@ -298,15 +298,15 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="47" y="23" width="1393" height="877" extended-state="6" />
-    <editor active="false" />
+    <frame x="47" y="23" width="1393" height="877" extended-state="0" />
+    <editor active="true" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24908693" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.19795471" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32908162" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.28954083" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32908162" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -360,11 +360,11 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="3660">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#24#974#1" expanded="false" />
-            <element signature="e#1014#1023#0" expanded="true" />
-            <element signature="e#1154#2790#0" expanded="false" />
-            <element signature="e#2843#3158#1" expanded="false" />
-            <element signature="e#5489#5864#1" expanded="false" />
+            <element signature="e#63#72#0" expanded="true" />
+            <element signature="e#201#1724#0" expanded="false" />
+            <element signature="e#1846#3260#0" expanded="false" />
+            <element signature="e#3317#3806#0" expanded="false" />
+            <element signature="e#3871#3997#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -384,25 +384,11 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="240" max-vertical-offset="3630">
           <caret line="196" column="0" selection-start-line="196" selection-start-column="0" selection-end-line="196" selection-end-column="0" />
           <folding>
-            <element signature="e#24#974#1" expanded="false" />
-            <element signature="e#1014#1023#0" expanded="true" />
-            <element signature="e#1154#2790#0" expanded="false" />
-            <element signature="e#2843#3158#1" expanded="false" />
-            <element signature="e#5489#5864#1" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/logistic_cg.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-112.566666" vertical-offset="238" max-vertical-offset="3705">
-          <caret line="330" column="0" selection-start-line="330" selection-start-column="0" selection-end-line="330" selection-end-column="0" />
-          <folding>
-            <element signature="e#24#974#1" expanded="false" />
-            <element signature="e#1014#1023#0" expanded="true" />
-            <element signature="e#1154#2790#0" expanded="false" />
-            <element signature="e#2843#3158#1" expanded="false" />
-            <element signature="e#5489#5864#1" expanded="false" />
+            <element signature="e#63#72#0" expanded="true" />
+            <element signature="e#201#1724#0" expanded="false" />
+            <element signature="e#1846#3260#0" expanded="false" />
+            <element signature="e#3317#3806#0" expanded="false" />
+            <element signature="e#3871#3997#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -419,10 +405,24 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.6983806" vertical-offset="825" max-vertical-offset="1350">
-          <caret line="78" column="26" selection-start-line="78" selection-start-column="0" selection-end-line="79" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="915" max-vertical-offset="1455">
+          <caret line="91" column="41" selection-start-line="91" selection-start-column="41" selection-end-line="91" selection-end-column="41" />
           <folding>
             <element signature="e#53#73#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/logistic_cg.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.14285715" vertical-offset="750" max-vertical-offset="2730">
+          <caret line="146" column="23" selection-start-line="146" selection-start-column="23" selection-end-line="146" selection-end-column="23" />
+          <folding>
+            <element signature="e#63#72#0" expanded="true" />
+            <element signature="e#201#1724#0" expanded="false" />
+            <element signature="e#1846#3260#0" expanded="false" />
+            <element signature="e#3317#3806#0" expanded="false" />
+            <element signature="e#3871#3997#0" expanded="false" />
           </folding>
         </state>
       </provider>

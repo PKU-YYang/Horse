@@ -82,3 +82,11 @@ __author__ = 'Yang'
         datasets = load_data(dataset[0],dataset[1],dataset[2])
         test_set_x, test_set_y, test_set_index = datasets[2]
         f=function([],test_set_x)
+
+        index=T.ivector()
+        race_prob=T.matrix()
+        _1st_prob, _ = theano.scan(fn= lambda _1st, prior_reuslt, _prob: prior_reuslt+T.log(_prob[_1st]),
+                                   sequences=[index[:-1]],
+                                   outputs_info=T.as_tensor_variable(numpy.array([0.])),
+                                   non_sequences=race_prob)
+        f=theano.function([race_prob,index],-_1st_prob[-1]/T.log(1./index[-1]) )

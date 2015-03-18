@@ -1,39 +1,4 @@
 #-*- encoding:utf-8 -*-
-"""
-This tutorial introduces logistic regression using Theano and conjugate
-gradient descent.
-
-Logistic regression is a probabilistic, linear classifier. It is parametrized
-by a weight matrix :math:`W` and a bias vector :math:`b`. Classification is
-done by projecting data points onto a set of hyperplanes, the distance to
-which is used to determine a class membership probability.
-
-Mathematically, this can be written as:
-
-.. math::
-  P(Y=i|x, W,b) &= softmax_i(W x + b) \\
-                &= \frac {e^{W_i x + b_i}} {\sum_j e^{W_j x + b_j}}
-
-
-The output of the model or prediction is then done by taking the argmax of
-the vector whose i'th element is P(Y=i|x).
-
-.. math::
-
-  y_{pred} = argmax_i P(Y=i|x,W,b)
-
-
-This tutorial presents a conjugate gradient optimization method that is
-suitable for smaller datasets.
-
-
-References:
-
-   - textbooks: "Pattern Recognition and Machine Learning" -
-                 Christopher M. Bishop, section 4.3.2
-
-
-"""
 
 __docformat__ = 'restructedtext en'
 
@@ -41,9 +6,7 @@ __docformat__ = 'restructedtext en'
 import os
 import sys
 import time
-
 import numpy
-
 import theano
 import theano.tensor as T
 
@@ -52,20 +15,14 @@ import theano.tensor as T
 def load_data(trainset, validset, testset):
 
     #分别读入三个文件并share他们
-    #f=open(validset,"rb")
-    data=numpy.loadtxt(validset,delimiter=',',dtype=float,skiprows=1)
-    #f.close()
+    data=numpy.loadtxt(trainset, delimiter=',', dtype=float, skiprows=1)
+    train_set=(data[:,:-2],data[:,-2],data[:,-1])
+
+    data = numpy.loadtxt(validset, delimiter=',', dtype=float, skiprows=1)
     valid_set=(data[:,:-2],data[:,-2],data[:,-1]) #feature,label,raceid
 
-    #f=open(testset,"rb")
-    data=numpy.loadtxt(testset,delimiter=',',dtype=float,skiprows=1)
-    #f.close()
+    data=numpy.loadtxt(testset, delimiter=',', dtype=float, skiprows=1)
     test_set=(data[:,:-2],data[:,-2],data[:,-1])
-
-    #f=open(trainset,"rb")
-    data=numpy.loadtxt(trainset,delimiter=',',dtype=float,skiprows=1)
-    #f.close()
-    train_set=(data[:,:-2],data[:,-2],data[:,-1])
 
     def shared_dataset(data_xy, borrow=True):
 
@@ -79,6 +36,7 @@ def load_data(trainset, validset, testset):
         shared_index = theano.shared(numpy.asarray(data_index,
                                                dtype=theano.config.floatX),
                                  borrow=borrow)
+
         return shared_x, T.cast(shared_y, 'int32'), T.cast(shared_index, 'int32')
 
     test_set_x, test_set_y, test_set_index = shared_dataset(test_set)
@@ -90,15 +48,7 @@ def load_data(trainset, validset, testset):
     return rval
 
 
-
 class ConditionalLogisticRegression(object):
-    """Multi-class Logistic Regression Class
-
-    The logistic regression is fully described by a weight matrix :math:`W`
-    and bias vector :math:`b`. Classification is done by projecting data
-    points onto a set of hyperplanes, the distance to which is used to
-    determine a class membership probability.
-    """
 
     def __init__(self, input, n_in, index): #input是一个minibatch
 
@@ -120,7 +70,7 @@ class ConditionalLogisticRegression(object):
         _raw_w = T.exp(T.dot(input, self.W) + self.b)
 
         #计算每组比赛内的和
-        def cumsum_within_group(_start, _index, _race): #计算每组比赛内的和
+        def cumsum_within_group(_start, _index, _race):
             start_point=_index[_start]
             stop_point=_index[_start+1]
             return T.sum(_race[start_point:stop_point])
@@ -132,52 +82,41 @@ class ConditionalLogisticRegression(object):
 
         #构造一个rep(cumsum,times)的序列，目的是直接相除从而得到每匹马的概率
         _times, _ = theano.scan(fn=lambda i, index: index[i+1]-index[i],
-                              sequences=[T.arange(index.shape[0]-1)],
-                              non_sequences=index)
+                                sequences=[T.arange(index.shape[0]-1)],
+                                non_sequences=index)
 
         _race_prob_div = T.repeat(_cumsum.ravel(), _times)
 
         self.race_prob = _raw_w / T.reshape(_race_prob_div,[_race_prob_div.shape[0],1])
 
+        self.mean_neg_loglikelihood = None
 
-        self.prob=T.reshape(_prob,(_prob.ravel().shape[0],1))
+        self.neg_log_likelihood = None
 
-        self.y_pred = T.argmax(self.p_y_given_x, axis=1)
+        self.r_square = None
 
-    def negative_log_likelihood(self, y):
+    def negative_log_likelihood(self, index):
 
-        return -T.mean(T.log(self.p_y_given_x)[T.arange(y.shape[0]), y])
+        _1st_prob, _ = theano.scan(fn= lambda _1st, prior_reuslt, _prob: prior_reuslt+T.log(_prob[_1st]),
+                                   sequences=[index[:-1]],
+                                   outputs_info=T.as_tensor_variable(numpy.array([0.])),
+                                   non_sequences=self.race_prob)
 
-    def errors(self, y):
+        self.neg_log_likelihood = -_1st_prob[-1] #这个是负的
 
-        # check if y has same dimension of y_pred
-        if y.ndim != self.y_pred.ndim:
-            raise TypeError(
-                'y should have the same shape as self.y_pred',
-                ('y', y.type, 'y_pred', self.y_pred.type)
-            )
-        # check if y is of the correct datatype
-        if y.dtype.startswith('int'):
-            # the T.neq operator returns a vector of 0s and 1s, where 1
-            # represents a mistake in prediction
-            return T.mean(T.neq(self.y_pred, y))
-        else:
-            raise NotImplementedError()
+        self.mean_neg_loglikelihood = self.neg_log_likelihood/index.shape[0]
+
+        return self.mean_neg_loglikelihood
+
+    def Rsquare(self, index): #rsqaure约大越好，函数返回的值越小越好
+
+        self.r_square = 1+self.neg_log_likelihood/(T.log(1./index[-1]))
+
+        return -self.neg_log_likelihood/(T.log(1./index[-1]))
 
 
-def cg_optimization_mnist(n_epochs=50, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], n_in=27):
-    """Demonstrate conjugate gradient optimization of a log-linear model
+def cg_optimization_mnist(n_epochs=50, batch_size=100 ,dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], n_in=27):
 
-    This is demonstrated on MNIST.
-
-    :type n_epochs: int
-    :param n_epochs: number of epochs to run the optimizer
-
-    :type mnist_pkl_gz: string
-    :param mnist_pkl_gz: the path of the mnist training file from
-                 http://www.iro.umontreal.ca/~lisa/deep/data/mnist/mnist.pkl.gz
-
-    """
     #############
     # LOAD DATA #
     #############
@@ -187,14 +126,14 @@ def cg_optimization_mnist(n_epochs=50, dataset=['horse_train.csv','horse_valid.c
     valid_set_x, valid_set_y, valid_set_index = datasets[1]
     test_set_x, test_set_y, test_set_index = datasets[2]
 
-    batch_size = 100    # size of the minibatch
+    batch_size = batch_size    # size of the minibatch
 
     n_train_batches = len(numpy.unique(train_set_index.eval())) / batch_size
     n_valid_batches = len(numpy.unique(valid_set_index.eval())) / batch_size
     n_test_batches = len(numpy.unique(test_set_index.eval())) / batch_size
 
-    n_in = n_in  # number of input units
-    #n_out = n_out  # number of output units
+    n_in = n_in  # number of features in a horse
+
 
     ######################
     # BUILD ACTUAL MODEL #
@@ -202,17 +141,15 @@ def cg_optimization_mnist(n_epochs=50, dataset=['horse_train.csv','horse_valid.c
     print '... building the model'
 
 
-    minibatch_offset = T.lscalar()
+    minibatch_offset = T.lscalar()  #i * batch_size for i in xrange(n_train_batches)
     x = T.matrix()
     y = T.ivector()
-    indx = T.ivector()
+    index = T.ivector()
 
-    # construct the logistic regression class
-    classifier = ConditionalLogisticRegression(input=x, n_in=27, index=indx)
+    #construct symbolic model
+    classifier = ConditionalLogisticRegression(input=x, n_in=27, index=index)
 
-    # the cost we minimize during training is the negative log likelihood of
-    # the model in symbolic format
-    cost = classifier.negative_log_likelihood(y).mean()
+    cost = classifier.negative_log_likelihood(index)
 
     #根据一个Minibatch号码在test数据上计算error
     test_model = theano.function(
