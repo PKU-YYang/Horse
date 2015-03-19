@@ -11,7 +11,7 @@ import theano
 import theano.tensor as T
 from scipy.stats import itemfreq
 import scipy.optimize
-#theano.config.warn.sum_sum_bug=False
+
 
 def load_data(trainset, validset, testset):
 
@@ -34,7 +34,7 @@ def load_data(trainset, validset, testset):
         shared_y = theano.shared(numpy.asarray(data_y,
                                                dtype=theano.config.floatX),
                                  borrow=borrow)
-
+        #index实际的样子是从0开始每一位记录每组赛事的第一名的位置，也就是每组比赛开始的地方，最后一位是全部输入sample的行数
         data_index = numpy.concatenate((numpy.array([0]), numpy.cumsum(itemfreq(data_index)[:,1])))
 
         shared_index = theano.shared(numpy.asarray(data_index,
@@ -43,6 +43,7 @@ def load_data(trainset, validset, testset):
 
         return shared_x, T.cast(shared_y, 'int32'), T.cast(shared_index, 'int32')
 
+    #主要是用x和index，y未来再使用
     test_set_x, test_set_y, test_set_index = shared_dataset(test_set)
     valid_set_x, valid_set_y, valid_set_index = shared_dataset(valid_set)
     train_set_x, train_set_y, train_set_index = shared_dataset(train_set)
@@ -53,11 +54,12 @@ def load_data(trainset, validset, testset):
 
 class ConditionalLogisticRegression(object):
 
-    def __init__(self, input, n_in, index): #input是一个minibatch
+    def __init__(self, input, n_in, index): #input是一个minibatch，单位是一组赛事，不是一个sample
 
 
-        n_out=1 #对于CL模型来说，并不是每一类构建一个分类平面，一直都只有一个数值
+        n_out=1  #对于CL模型来说，并不是每一类构建一个分类平面，一直都只有一个数值,就是每匹马夺冠的概率
 
+        #把W和b写在theta里面方便T.grad
         self.theta = theano.shared(
             value=numpy.zeros(
                 n_in * n_out + n_out,
@@ -69,55 +71,42 @@ class ConditionalLogisticRegression(object):
         self.W = self.theta[0:n_in * n_out].reshape((n_in, n_out))
         self.b = self.theta[n_in * n_out:n_in * n_out + n_out]
 
-        # 计算概率的exp归一化矩阵,group by index
+        # 把线性回归的值exp之后再按组归一化就是最后的值
         _raw_w = T.exp(T.dot(input, self.W) + self.b)
 
-        #计算每组比赛内的和
+        # 计算每组比赛内的exp和
         def cumsum_within_group(_start, _index, _race):
             start_point = _index[_start]
             stop_point = _index[_start+1]
             return T.sum(_race[start_point:stop_point], dtype='float32')
 
+        # _cumsum就是每组的exp的合
         _cumsum, _ = theano.scan(cumsum_within_group,
                                  sequences=[T.arange(index.shape[0]-1)],
                                  non_sequences=[index, _raw_w])
 
 
         #构造一个rep(cumsum,times)的序列，目的是直接相除从而得到每匹马的概率
+        # _times里存的是每组比赛的马的数量
         self._times, _ = theano.scan(fn=lambda i, index: index[i+1]-index[i],
                                      sequences=[T.arange(index.shape[0]-1)],
                                      non_sequences=index)
-        #[1]
-        # _output_info = T.alloc(_cumsum.ravel()[0],self._times[0])
-        # _race_prob_div, _ = theano.scan(fn=lambda t, _pre, prob: T.concatenate((_pre, T.alloc(prob[t], t))),
-        #                                 sequences = [self._times],
-        #                                 outputs_info = _output_info,
-        #                                 non_sequences = [_cumsum.ravel()])
-        # _race_prob_div = _race_prob_div[-1]
-        #[2]
-        #_race_prob_div = T.repeat(_cumsum.ravel(), self._times)
 
-        #self.race_prob = _raw_w / T.reshape(_race_prob_div,[_race_prob_div.shape[0], 1])
-
-        #[3]
-        #self.race_prob = _raw_w / T.min(_cumsum)
-
-        #[4]
         _raceprobdiv = T.ones_like(_raw_w)
 
+        # 这里运用的技巧是构造一个等长的序列，然后用T.set_subtensor改变里面的值，SCAN不允许每次输出长度不一样的序列，所以不可以concatenate
         def change_race_prob_div(_i, _change, _rep, _times, _item):
             _change = T.set_subtensor(_change[_rep[_i]:_rep[_i+1]], T.reshape(T.alloc(_item[_i],_times[_i]),(_times[_i],1)))
             return _change
 
+        # _race_prob_div存的是每一位对应的要除的概率归一化的值
         _race_prob_div, _ = theano.scan(fn = change_race_prob_div,
                                         sequences=[T.arange(index.shape[0]-1)],
                                         outputs_info=[_raceprobdiv],
                                         non_sequences=[index,self._times, _cumsum])
 
+        #归一化以后的概率值
         self.race_prob = _raw_w / _race_prob_div[-1]
-
-
-
 
         self.mean_neg_loglikelihood = None
 
@@ -131,13 +120,15 @@ class ConditionalLogisticRegression(object):
 
     def negative_log_likelihood(self, index):
 
+        #特别注意：output_info一定不能用numpy组成的序列，用也要禁掉broadcast，或者干脆用shared variable
         _output_info = T.as_tensor_variable(numpy.array([0.]))
 
         _output_info = T.unbroadcast(_output_info, 0)
 
+        # _1st_prob存的是对每次比赛第一匹马的likelihood求和的过程
         _1st_prob, _ = theano.scan(fn= lambda _1st, prior_reuslt, _prob: prior_reuslt+T.log(_prob[_1st]),
                                    sequences=[index[:-1]],
-                                   outputs_info=_output_info, #特别注意：output_info一定不能用numpy组成的序列，用shared或者禁掉broadcast
+                                   outputs_info=_output_info,
                                    non_sequences=self.race_prob)
 
         self.neg_log_likelihood = 0. - _1st_prob[-1] #这个是负的
@@ -146,17 +137,8 @@ class ConditionalLogisticRegression(object):
 
         self.mean_neg_loglikelihood = self.neg_log_likelihood/(index.shape[0]-1)
 
+        #因为cost必须是0维的，所以用T.mean巧妙的转换一下
         return T.mean(self.mean_neg_loglikelihood.ravel(), dtype='float32')
-
-        #return T.mean(self.neg_log_likelihood.ravel(), dtype='float32')
-
-        # _1st_prob, _ = theano.scan(fn= lambda _1st,  _prob: T.log(_prob[_1st]),
-        #                            sequences=[index[:-1]],
-        #                            non_sequences=self.race_prob)
-        #
-        # self.neg_log_likelihood = -T.sum(_1st_prob.ravel(), dtype='float32')
-        #
-        # self.mean_neg_loglikelihood = -T.mean(_1st_prob.ravel(), dtype='float32')
 
     def Rsquare(self, index): #rsqaure约大越好，函数返回的值越小越好
 
@@ -164,6 +146,7 @@ class ConditionalLogisticRegression(object):
 
         _output_info = T.unbroadcast(_output_info, 0)
 
+        # rsquare计算是除以Ln(1/n_i),n_i是每组比赛中马的个数
         _r_square_div, _ = theano.scan(fn = lambda _t, prior_reuslt: prior_reuslt+T.log(1./_t),
                                        sequences=[self._times],
                                        outputs_info=_output_info #特别注意：output_info一定不能用numpy组成的序列，用shared或者禁掉broadcast
@@ -173,15 +156,19 @@ class ConditionalLogisticRegression(object):
 
         self.r_square = 1 - self.r_error
 
+        #用T.mean转化成一维的
         return T.mean(self.r_error.ravel(), dtype='float32')
-        #return -self.neg_log_likelihood/(T.log(1./index[-1]))
+
+    def show_theta(self):
+
+        return self.theta.get_value()
 
 def cg_optimization_horse(dataset, n_epochs=50, batch_size=100):
 
     #############
     # LOAD DATA #
     #############
-    datasets = load_data(dataset[0],dataset[1],dataset[2])
+    datasets = load_data(dataset[0], dataset[1], dataset[2])
 
     train_set_x, train_set_y, train_set_index = datasets[0]
     valid_set_x, valid_set_y, valid_set_index = datasets[1]
@@ -189,7 +176,8 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100):
 
     batch_size = batch_size    # size of the minibatch
 
-    n_train_batches = (len(numpy.unique(train_set_index.eval()))-1) / batch_size #-1是因为多一个零
+    #-1是因为多一个零，因为index第一位必须标明第一组比赛起始的地方
+    n_train_batches = (len(numpy.unique(train_set_index.eval()))-1) / batch_size
     n_valid_batches = (len(numpy.unique(valid_set_index.eval()))-1) / batch_size
     n_test_batches = (len(numpy.unique(test_set_index.eval()))-1) / batch_size
 
@@ -201,18 +189,15 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100):
     ######################
     print '... building the model'
 
-
     minibatch = T.lscalar()
     x = T.matrix()
     index = T.ivector()
-    #index_all = T.ivector()
 
-    #construct symbolic model
+    #用symbol构建出model的类
     classifier = ConditionalLogisticRegression(input=x, n_in=n_in, index=index)
-
     cost = classifier.negative_log_likelihood(index)
 
-    #根据一个Minibatch号码在test数据上计算error,这里是rsquare
+    #根据一个Minibatch号码，提供一个batchsize多组的sample, 在test数据上计算模型的rsquare，最终的rsquare是batch上rsquare的平均
     test_model = theano.function(
         [minibatch],
         classifier.Rsquare(index), #计算test set上的错误率
@@ -222,7 +207,7 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100):
         },
         name="test"
     )
-    #根据一个Minibatch号码在valida数据上计算error,这里是rsquare
+    #根据一个Minibatch号码，提供一个batchsize多组的sample, 在valid数据上计算模型的rsquare，最终的rsquare是batch上rsquare的平均
     validate_model = theano.function(
         [minibatch],
         classifier.Rsquare(index), #计算validate set上的错误率 R error
@@ -233,7 +218,7 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100):
         name="validate"
     )
 
-    # 封装一个根据特定minibatch号码计算likelihood cost的函数
+    #提供train_set上从Minibatch开始接下去一个batchsize这么多组的赛马sample，计算model在这些比赛上likelihood
     batch_cost = theano.function(
         [minibatch],
         cost, #计算一个起始点开始接下来batch_size个函数的log-liklihood
@@ -244,26 +229,25 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100):
         name="batch_cost"
     )
 
-    # 封装一个根据特定minibatch号码计算gradient的函数
+    #根据上面提供的cost计算gradient
     batch_grad = theano.function(
         [minibatch],
-        T.grad(cost, classifier.theta), #这句有问题
+        T.grad(cost, classifier.theta),
         givens={
             x: train_set_x[train_set_index[minibatch]:train_set_index[minibatch + batch_size]],
             index: train_set_index[minibatch:(minibatch + batch_size + 1)] - train_set_index[minibatch]
         },
         name="batch_grad"
-        #,mode="DebugMode"
     )
 
-    # 计算train数据上的cost函数
+    # 计算train_set数据上的cost, loop所有的batch，最后cost按平均值算
     def train_fn(theta_value):
         classifier.theta.set_value(theta_value, borrow=True)
         train_losses = [batch_cost(i * batch_size)
                         for i in xrange(n_train_batches)] #在所有的batch上计算cost，然后输出均值
         return numpy.mean(train_losses)
 
-    # 用预测对的所有likelihood为cost，计算gradient
+    # 计算在train_Set的所有batch上的gradient,然后做平均
     def train_fn_grad(theta_value):
         classifier.theta.set_value(theta_value, borrow=True)
         grad = batch_grad(0)
@@ -271,26 +255,28 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100):
             grad += batch_grad(i * batch_size)
         return grad / n_train_batches
 
-    validation_scores = [numpy.inf, 0] #用来记录最小的在validation和test上的loss
+    validation_scores = [numpy.inf, 0] #用来记录在validation和test上的最完美的rsquare
+    filename = ["eph", str(n_epochs), "_bs", str(batch_size), '_best.csv']
 
-    # 计算在validation数据上的错误率，如果创了记录，那么就在test数据上测试
+    # 在train_set的每个batch的赛事输入以后，计算当前在train_set上的cost和下一步的gradient
+    # 然后计算该模型在validation数据上的rsquare，如果创了记录，那么就在test数据上测试
     def callback(theta_value):
         classifier.theta.set_value(theta_value, borrow=True)
-        #compute the validation error
         validation_losses = [validate_model(i * batch_size) #计算valid_set上的r suqare
                              for i in xrange(n_valid_batches)]
         this_validation_loss = numpy.mean(validation_losses)
         print('validation R Square %f ' % (1-this_validation_loss,))
 
-        # check if it is better then best validation score got until now
         if this_validation_loss < validation_scores[0]:
-            # if so, replace the old one, and compute the score on the
-            # testing dataset
+
             validation_scores[0] = this_validation_loss
-            test_losses = [test_model(i * batch_size) #如果效果好就在test set上计算错误率
+            test_losses = [test_model(i * batch_size) #如果效果好就在test set上计算rsquare
                            for i in xrange(n_test_batches)]
             validation_scores[1] = numpy.mean(test_losses)
 
+            #model最好的时候存权重
+            weights = classifier.show_theta() #get_value之后中间不需要function再过度
+            numpy.savetxt("".join(filename), numpy.hstack((weights,1-this_validation_loss)), delimiter=',')
     ###############
     # TRAIN MODEL #
     ###############
@@ -299,11 +285,11 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100):
 
     print ("Optimizing using scipy.optimize.fmin_cg...")
     start_time = time.clock()
-    best_w_b = scipy.optimize.fmin_cg( #在train_set上每train一个minibatch就测试在测试集上的error，存那个最低的，测试函数就是这里的callback
-        f=train_fn,
+    best_w_b = scipy.optimize.fmin_cg(
+        f=train_fn,#存cost
         x0=numpy.zeros((n_in + 1) * n_out, dtype=x.dtype),
         fprime=train_fn_grad, #存gradient
-        callback=callback,
+        callback=callback,#在train_set上每train一个minibatch后就测试在valid_set上的r2，存一个最好的，测试函数就是这里的callback
         disp=0,
         maxiter=n_epochs
     )
@@ -322,7 +308,9 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100):
 
 
 if __name__ == '__main__':
-    cg_optimization_horse(n_epochs=50, batch_size=50, dataset=['horse_valid.csv','horse_valid.csv','horse_test.csv'])
+
+    for i in xrange(50,2500,50):
+        cg_optimization_horse(n_epochs=1000, batch_size=i, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'])
 
 
 
