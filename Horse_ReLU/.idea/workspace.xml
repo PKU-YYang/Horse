@@ -39,8 +39,8 @@
       <file leaf-file-name="logistic_cg.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/logistic_cg.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.30161944" vertical-offset="3541" max-vertical-offset="4035">
-              <caret line="282" column="68" selection-start-line="282" selection-start-column="68" selection-end-line="282" selection-end-column="68" />
+            <state vertical-scroll-proportion="0.61133605" vertical-offset="553" max-vertical-offset="4215">
+              <caret line="93" column="70" selection-start-line="93" selection-start-column="70" selection-end-line="93" selection-end-column="70" />
               <folding>
                 <element signature="e#63#72#0" expanded="true" />
                 <element signature="e#292#1917#0" expanded="false" />
@@ -52,10 +52,11 @@
       <file leaf-file-name="test.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="1860" max-vertical-offset="4080">
-              <caret line="150" column="57" selection-start-line="147" selection-start-column="0" selection-end-line="150" selection-end-column="57" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="4708" max-vertical-offset="5445">
+              <caret line="392" column="49" selection-start-line="392" selection-start-column="41" selection-end-line="392" selection-end-column="49" />
               <folding>
                 <element signature="e#53#73#0" expanded="true" />
+                <element signature="e#9383#11457#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -370,11 +371,22 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="25" />
+      <option name="time" value="27" />
     </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="4708" max-vertical-offset="5445">
+          <caret line="392" column="49" selection-start-line="392" selection-start-column="41" selection-end-line="392" selection-end-column="49" />
+          <folding>
+            <element signature="e#53#73#0" expanded="true" />
+            <element signature="e#9383#11457#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/logistic_sgd.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="1736" max-vertical-offset="5025">
@@ -402,6 +414,7 @@
           <caret line="195" column="39" selection-start-line="195" selection-start-column="39" selection-end-line="195" selection-end-column="39" />
           <folding>
             <element signature="e#53#73#0" expanded="true" />
+            <element signature="e#9383#11457#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -433,6 +446,7 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#53#73#0" expanded="true" />
+            <element signature="e#9383#11457#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -474,6 +488,7 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#53#73#0" expanded="true" />
+            <element signature="e#9383#11457#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -505,6 +520,7 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#53#73#0" expanded="true" />
+            <element signature="e#9383#11457#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -536,6 +552,7 @@
           <caret line="91" column="41" selection-start-line="91" selection-start-column="41" selection-end-line="91" selection-end-column="41" />
           <folding>
             <element signature="e#53#73#0" expanded="true" />
+            <element signature="e#9383#11457#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -567,6 +584,7 @@
           <caret line="91" column="41" selection-start-line="91" selection-start-column="41" selection-end-line="91" selection-end-column="41" />
           <folding>
             <element signature="e#53#73#0" expanded="true" />
+            <element signature="e#9383#11457#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -598,6 +616,7 @@
           <caret line="91" column="41" selection-start-line="91" selection-start-column="41" selection-end-line="91" selection-end-column="41" />
           <folding>
             <element signature="e#53#73#0" expanded="true" />
+            <element signature="e#9383#11457#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -629,6 +648,7 @@
           <caret line="91" column="41" selection-start-line="91" selection-start-column="41" selection-end-line="91" selection-end-column="41" />
           <folding>
             <element signature="e#53#73#0" expanded="true" />
+            <element signature="e#9383#11457#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -660,6 +680,7 @@
           <caret line="91" column="41" selection-start-line="91" selection-start-column="41" selection-end-line="91" selection-end-column="41" />
           <folding>
             <element signature="e#53#73#0" expanded="true" />
+            <element signature="e#9383#11457#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -691,6 +712,7 @@
           <caret line="91" column="41" selection-start-line="91" selection-start-column="41" selection-end-line="91" selection-end-column="41" />
           <folding>
             <element signature="e#53#73#0" expanded="true" />
+            <element signature="e#9383#11457#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -722,6 +744,7 @@
           <caret line="91" column="41" selection-start-line="91" selection-start-column="41" selection-end-line="91" selection-end-column="41" />
           <folding>
             <element signature="e#53#73#0" expanded="true" />
+            <element signature="e#9383#11457#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -753,6 +776,7 @@
           <caret line="91" column="41" selection-start-line="91" selection-start-column="41" selection-end-line="91" selection-end-column="41" />
           <folding>
             <element signature="e#53#73#0" expanded="true" />
+            <element signature="e#9383#11457#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -857,18 +881,19 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="1860" max-vertical-offset="4080">
-          <caret line="150" column="57" selection-start-line="147" selection-start-column="0" selection-end-line="150" selection-end-column="57" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="4708" max-vertical-offset="5445">
+          <caret line="392" column="49" selection-start-line="392" selection-start-column="41" selection-end-line="392" selection-end-column="49" />
           <folding>
             <element signature="e#53#73#0" expanded="true" />
+            <element signature="e#9383#11457#0" expanded="false" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/logistic_cg.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.30161944" vertical-offset="3541" max-vertical-offset="4035">
-          <caret line="282" column="68" selection-start-line="282" selection-start-column="68" selection-end-line="282" selection-end-column="68" />
+        <state vertical-scroll-proportion="0.61133605" vertical-offset="553" max-vertical-offset="4215">
+          <caret line="93" column="70" selection-start-line="93" selection-start-column="70" selection-end-line="93" selection-end-column="70" />
           <folding>
             <element signature="e#63#72#0" expanded="true" />
             <element signature="e#292#1917#0" expanded="false" />
