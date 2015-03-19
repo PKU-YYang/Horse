@@ -273,7 +273,6 @@ __author__ = 'Yang'
 
 
 
-
 from theano import *
 import theano.tensor as T
 from logistic_cg import load_data
@@ -322,11 +321,24 @@ class ConditionalLogisticRegression(object):
         #                                 non_sequences = [_cumsum.ravel(), _times])
         # _race_prob_div = _race_prob_div[-1]
 
-        self._race_prob_div = T.repeat(self._cumsum.ravel(), self._times)
-
-        self.race_prob = self._raw_w / T.reshape(self._race_prob_div,[self._race_prob_div.shape[0], 1])
+        # self._race_prob_div = T.repeat(self._cumsum.ravel(), self._times)
+        #
+        # self.race_prob = self._raw_w / T.reshape(self._race_prob_div,[self._race_prob_div.shape[0], 1])
 
         #self.race_prob = _raw_w / T.min(_cumsum)
+
+        self._race_prob_div = T.ones_like(self._raw_w)
+
+        def change_race_prob_div(_i, _change, _rep, _times, _item):
+            _change = T.set_subtensor(_change[_rep[_i]:_rep[_i+1]], T.reshape(T.alloc(_item[_i],_times[_i]),(_times[_i],1)))
+            return _change
+
+        self._k, __ = theano.scan(fn = change_race_prob_div,
+                            sequences=[T.arange(index.shape[0]-1)],
+                            outputs_info=[self._race_prob_div],
+                            non_sequences=[index,self._times, self._cumsum])
+
+        self.race_prob = self._raw_w / self._k[-1]
 
         self.mean_neg_loglikelihood = None
 

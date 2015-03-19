@@ -87,19 +87,37 @@ class ConditionalLogisticRegression(object):
         self._times, _ = theano.scan(fn=lambda i, index: index[i+1]-index[i],
                                      sequences=[T.arange(index.shape[0]-1)],
                                      non_sequences=index)
-
-        # _output_info = T.alloc(_cumsum.ravel()[0],_times[0])
-        # _race_prob_div, _ = theano.scan(fn=lambda t, _pre, prob, time: T.concatenate((_pre, T.alloc(prob[t], time[t]))),
-        #                                 sequences = [T.arange(_times.shape[0])[1:]],
+        #[1]
+        # _output_info = T.alloc(_cumsum.ravel()[0],self._times[0])
+        # _race_prob_div, _ = theano.scan(fn=lambda t, _pre, prob: T.concatenate((_pre, T.alloc(prob[t], t))),
+        #                                 sequences = [self._times],
         #                                 outputs_info = _output_info,
-        #                                 non_sequences = [_cumsum.ravel(), _times])
+        #                                 non_sequences = [_cumsum.ravel()])
         # _race_prob_div = _race_prob_div[-1]
+        #[2]
+        #_race_prob_div = T.repeat(_cumsum.ravel(), self._times)
 
-        _race_prob_div = T.repeat(_cumsum.ravel(), self._times)
+        #self.race_prob = _raw_w / T.reshape(_race_prob_div,[_race_prob_div.shape[0], 1])
 
-        self.race_prob = _raw_w / T.reshape(_race_prob_div,[_race_prob_div.shape[0], 1])
-
+        #[3]
         #self.race_prob = _raw_w / T.min(_cumsum)
+
+        #[4]
+        _raceprobdiv = T.ones_like(_raw_w)
+
+        def change_race_prob_div(_i, _change, _rep, _times, _item):
+            _change = T.set_subtensor(_change[_rep[_i]:_rep[_i+1]], T.reshape(T.alloc(_item[_i],_times[_i]),(_times[_i],1)))
+            return _change
+
+        _race_prob_div, _ = theano.scan(fn = change_race_prob_div,
+                                        sequences=[T.arange(index.shape[0]-1)],
+                                        outputs_info=[_raceprobdiv],
+                                        non_sequences=[index,self._times, _cumsum])
+
+        self.race_prob = _raw_w / _race_prob_div[-1]
+
+
+
 
         self.mean_neg_loglikelihood = None
 
