@@ -88,15 +88,19 @@ class ConditionalLogisticRegression(object):
                                 sequences=[T.arange(index.shape[0]-1)],
                                 non_sequences=index)
 
-        _output_info = T.alloc(_cumsum.ravel()[0],_times[0])
-        _race_prob_div, _ = theano.scan(fn=lambda t, _pre, prob, time: T.concatenate((_pre, T.alloc(prob[t], time[t]))),
-                                        sequences = [T.arange(_times.shape[0])[1:]],
-                                        outputs_info = _output_info,
-                                        non_sequences = [_cumsum.ravel(), _times])
+        # _output_info = T.alloc(_cumsum.ravel()[0],_times[0])
+        # _race_prob_div, _ = theano.scan(fn=lambda t, _pre, prob, time: T.concatenate((_pre, T.alloc(prob[t], time[t]))),
+        #                                 sequences = [T.arange(_times.shape[0])[1:]],
+        #                                 outputs_info = _output_info,
+        #                                 non_sequences = [_cumsum.ravel(), _times])
+        # _race_prob_div = _race_prob_div[-1]
 
-        _race_prob_div = _race_prob_div[-1]
+        #_race_prob_div = T.repeat(_cumsum.ravel(),_times)
 
-        self.race_prob = _raw_w / T.reshape(_race_prob_div,[_race_prob_div.shape[0],1])
+        #self.race_prob = _raw_w / T.reshape(_race_prob_div,[_race_prob_div.shape[0],1])
+        self.race_prob = _raw_w / T.min(_cumsum)
+
+
 
         # self.mean_neg_loglikelihood = None
         #
@@ -117,17 +121,27 @@ class ConditionalLogisticRegression(object):
                                    outputs_info=_output_info, #特别注意：output_info一定不能用numpy组成的序列，用shared或者禁掉broadcast
                                    non_sequences=self.race_prob)
 
-        self.neg_log_likelihood = -_1st_prob[-1].ravel() #这个是负的
+        self.neg_log_likelihood = 0. - _1st_prob[-1] #这个是负的
 
-        self.mean_neg_loglikelihood = self.neg_log_likelihood/index.shape[0]
+        self.pos_log_likelihood = _1st_prob[-1]
+
+        self.mean_neg_loglikelihood = self.neg_log_likelihood/(index.shape[0]-1)
 
         return T.mean(self.mean_neg_loglikelihood.ravel(), dtype='float32')
 
+        # _1st_prob, _ = theano.scan(fn= lambda _1st,  _prob: T.log(_prob[_1st]),
+        #                            sequences=[index[:-1]],
+        #                            non_sequences=self.race_prob)
+        #
+        # self.neg_log_likelihood = -T.sum(_1st_prob.ravel(), dtype='float32')
+        #
+        # self.mean_neg_loglikelihood = -T.mean(_1st_prob.ravel(), dtype='float32')
+
     def Rsquare(self, index): #rsqaure约大越好，函数返回的值越小越好
 
-        self.r_square = 1+self.neg_log_likelihood/(T.log(1./index[-1]))
+        self.r_square = 1 - self.pos_log_likelihood / (T.log(1./index[-1]))
 
-        self.r_error = -self.neg_log_likelihood/(T.log(1./index[-1]))
+        self.r_error = self.pos_log_likelihood/(T.log(1./index[-1]))
 
         return T.mean(self.r_error.ravel(), dtype='float32')
         #return -self.neg_log_likelihood/(T.log(1./index[-1]))
@@ -166,7 +180,7 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100):
     #construct symbolic model
     classifier = ConditionalLogisticRegression(input=x, n_in=n_in, index=index)
 
-    cost = classifier.negative_log_likelihood(index).mean()
+    cost = classifier.negative_log_likelihood(index)
 
     #根据一个Minibatch号码在test数据上计算error,这里是rsquare
     test_model = theano.function(
@@ -233,7 +247,7 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100):
     def callback(theta_value):
         classifier.theta.set_value(theta_value, borrow=True)
         #compute the validation error
-        validation_losses = [validate_model(i * batch_size) #计算每个batch上的错误率
+        validation_losses = [validate_model(i * batch_size) #计算valid_set上的r suqare
                              for i in xrange(n_valid_batches)]
         this_validation_loss = numpy.mean(validation_losses)
         print('validation R Square %f ' % (1-this_validation_loss,))
@@ -266,8 +280,8 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100):
     end_time = time.clock()
     print(
         (
-            'Optimization complete with best validation score of %f %%, with '
-            'test performance %f %%'
+            'Optimization complete with best validation score of %f , with '
+            'test performance %f '
         )
         % (1-validation_scores[0] , 1-validation_scores[1] )
     )

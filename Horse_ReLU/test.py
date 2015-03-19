@@ -100,13 +100,68 @@ __author__ = 'Yang'
 
 
 
-
-
-
-
+        from theano import *
+        import theano.tensor as T
+        import numpy
 
         index=T.ivector()
         _raw_w=T.matrix()
+
+        #计算每组比赛内的和
+        def cumsum_within_group(_start, _index, _race):
+            start_point=_index[_start]
+            stop_point=_index[_start+1]
+            return T.sum(_race[start_point:stop_point], dtype='float32')
+
+        _cumsum, _ = theano.scan(cumsum_within_group,
+                                 sequences=[T.arange(index.shape[0]-1)],
+                                 non_sequences=[index, _raw_w])
+
+
+        #构造一个rep(cumsum,times)的序列，目的是直接相除从而得到每匹马的概率
+        _times, _ = theano.scan(fn=lambda i, index: index[i+1]-index[i],
+                                sequences=[T.arange(index.shape[0]-1)],
+                                non_sequences=index)
+        #
+        # _output_info = T.alloc(_cumsum.ravel()[0],_times[0])
+        # #_output_info2 = T.concatenate((_output_info, T.alloc(_cumsum.ravel()[1], _times[1])))
+        #
+        # _race_prob_div, _ = theano.scan(fn=lambda t, _pre, _all_prob, time: T.concatenate((_pre, T.alloc(_all_prob[t], time[t]))),
+        #                                 sequences = [T.arange(_times.shape[0])[1:]],
+        #                                 outputs_info = _output_info,
+        #                                 non_sequences = [_cumsum.ravel(), _times])
+        #
+        # _race_prob_div = _race_prob_div[-1]
+
+        _race_prob_div = T.repeat(_cumsum.ravel(),_times)
+
+        race_prob = _raw_w / T.reshape(_race_prob_div,[_race_prob_div.shape[0],1])
+
+        f=theano.function([_raw_w,index],_race_prob_div)
+
+        #f2=theano.function([_raw_w,index],[_cumsum,_times])
+
+        f3=theano.function([_raw_w, index],T.arange(_times.shape[0])[1:],on_unused_input='ignore' )
+        x=numpy.array([1.1,2.2,3.3,4.4,5.5,6.6,7.7,8.8],'float32').reshape(8,1)
+
+        y=numpy.array([0,2,5,8],'int32')
+
+
+        result, _ = theano.scan(fn = lambda i: i ,
+                                sequences = [index[:-1]])
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         def cumsum_within_group(_start, _index, _race): #start: arange(len(index)-1)
 
@@ -194,3 +249,19 @@ __author__ = 'Yang'
 
 
         init_y = T.alloc(numpy.cast[theano.config.floatX](0), [2,2,2])
+
+
+        _times=T.ivector()
+        _cumsum=T.matrix()
+
+        _output_info = T.alloc(_cumsum.ravel()[0],_times[0])
+        _race_prob_div, _ = theano.scan(fn=lambda t, _pre, prob, time: T.concatenate((_pre, T.alloc(prob[t], time[t]))),
+                                        sequences = [T.arange(_times.shape[0])[1:]],
+                                        outputs_info = _output_info,
+                                        non_sequences = [_cumsum.ravel(), _times])
+
+        _race_prob_div = _race_prob_div[-1]
+
+        race_prob = T.reshape(T.repeat(1.2,7),[7,1]) / T.reshape(_race_prob_div,[_race_prob_div.shape[0],1])
+
+        f=theano.function([_cumsum, _times],race_prob)
