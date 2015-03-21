@@ -54,20 +54,25 @@ def load_data(trainset, validset, testset):
 
 class ConditionalLogisticRegression(object):
 
-    def __init__(self, input, n_in, index): #input是一个minibatch，单位是一组赛事，不是一个sample
+    def __init__(self, input, n_in, index, theta = None): #input是一个minibatch，单位是一组赛事，不是一个sample
 
 
         n_out=1  #对于CL模型来说，并不是每一类构建一个分类平面，一直都只有一个数值,就是每匹马夺冠的概率
 
         #把W和b写在theta里面方便T.grad
-        self.theta = theano.shared(
-            value=numpy.zeros(
+
+        if theta is None:
+            self.theta = theano.shared(
+                value=numpy.zeros(
                 n_in * n_out + n_out,
                 dtype=theano.config.floatX
-            ),
-            name='theta',
-            borrow=True
-        )
+                ),
+                name='theta',
+                borrow=True
+            )
+        else:
+            self.theta = theta
+
         self.W = self.theta[0:n_in * n_out].reshape((n_in, n_out))
         self.b = self.theta[n_in * n_out:n_in * n_out + n_out]
 
@@ -105,7 +110,7 @@ class ConditionalLogisticRegression(object):
                                         outputs_info=[_raceprobdiv],
                                         non_sequences=[index,self._times, _cumsum])
 
-        #归一化以后的概率值
+        #归一化以后的概率值,整个init过程最重要的就是计算每匹马的概率，在普通的logistic里计算这个不需要label,只要一个softmax就行
         self.race_prob = _raw_w / _race_prob_div[-1]
 
         self.mean_neg_loglikelihood = None
@@ -117,6 +122,8 @@ class ConditionalLogisticRegression(object):
         self.r_square = None
 
         self.r_error = None
+
+        self.params = [self.W, self.b]
 
     def negative_log_likelihood(self, index):
 
@@ -294,6 +301,7 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100):
         maxiter=n_epochs
     )
     end_time = time.clock()
+    print best_w_b
     print(
         (
             'Optimization complete with best validation score of %f , with '
@@ -309,9 +317,10 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100):
 
 if __name__ == '__main__':
 
-    for i in xrange(50,2500,50):
-        cg_optimization_horse(n_epochs=1000, batch_size=i, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'])
+    # for i in xrange(750,1600,30):
+    #     for j in [600,1100]:
+    #         cg_optimization_horse(n_epochs=1000, batch_size=i, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'])
 
-
+    cg_optimization_horse(n_epochs=1000, batch_size=1500, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'])
 
 

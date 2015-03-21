@@ -424,3 +424,25 @@ classifier.W.eval()
 classifier.b.eval()
 
 classifier._raw_w.eval()
+
+
+        n_ins=10
+        numpy_rng = numpy.random.RandomState(89757)
+        hidden_layers_sizes=[10,20,30,40,50]
+        n_layers = len(hidden_layers_sizes)
+
+        _params = numpy.zeros(hidden_layers_sizes[-1]+1, dtype=theano.config.floatX)
+
+        for i in reversed(xrange(n_layers)):
+
+            if i == 0: #第一个隐层
+                n_in = n_ins
+            else:
+                n_in = hidden_layers_sizes[i-1]
+
+            n_out = hidden_layers_sizes[i]
+
+            _params = numpy.concatenate((_params, numpy.asarray(numpy_rng.uniform(
+                    low = -numpy.sqrt(6. / (n_in + n_out)),
+                    high = numpy.sqrt(6. / (n_in + n_out)),
+                    size = (n_in+1, n_out)).ravel(), dtype=theano.config.floatX)))

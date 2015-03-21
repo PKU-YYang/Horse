@@ -48,3 +48,27 @@ logan2 <- data.frame(logan[indx,],
                      tocc = factor(rep(resp, each=n)))
 logan2$case <- (logan2$occupation == logan2$tocc)
 f=clogit(case ~ tocc + tocc:education + strata(id), logan2)
+
+
+
+
+#take out the R square
+
+library(gsubfn)
+result_folder='./results_batch/'
+resultfiles=list.files(result_folder)
+best_param=data.frame(r2=0,batch=0,epoch=0)
+for (i in 1:length(resultfiles)) {
+  data=(read.csv(paste(result_folder,resultfiles[i],sep='')
+                 ,colClasses="numeric",header=F))
+  best_param[i,1]=as.numeric(tail(data,1))
+  best_param[i,2]=as.numeric(strapplyc(resultfiles[i], "_bs([0-9]+)")[[1]])
+  best_param[i,3]=as.numeric(strapplyc(resultfiles[i], "eph([0-9]+)")[[1]])
+}
+
+best_param_order=best_param[order(best_param[,1],decreasing=T),]
+
+
+
+
+
