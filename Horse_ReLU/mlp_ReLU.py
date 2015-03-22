@@ -10,13 +10,12 @@ import theano
 import theano.tensor as T
 from scipy.stats import itemfreq
 import scipy.optimize
+from theano.tensor.shared_randomstreams import RandomStreams
 from logistic_cg import load_data, ConditionalLogisticRegression
 
 
 def ReLU(x):
     return T.switch(x < 0, 0, x)
-
-
 
 class HiddenLayer(object):
 
@@ -55,13 +54,11 @@ class HiddenLayer(object):
 
         self.params = [self.W, self.b]
 
-
 class MLP(object):
 
     def __init__(
         self,
         numpy_rng,
-        index,
         theano_rng=None,
         n_ins=784,
         hidden_layers_sizes = [500, 500],
@@ -70,14 +67,16 @@ class MLP(object):
         activation_function = T.nnet.sigmoid
     ):
 
-        assert self.n_layers > 0
+
 
         if not theano_rng:
-            theano_rng = theano.RandomStreams(numpy_rng.randint(2 ** 17)) #一个除了89757改变随机的地方
+            theano_rng = RandomStreams(numpy_rng.randint(2 ** 17)) #一个除了89757改变随机的地方
 
         #因为cg算法优化函数的特性，params必须放在一起
         #倒过来构建，先构建顶层conditional logit 的参数
         self.n_layers = len(hidden_layers_sizes)
+
+        assert self.n_layers > 0
 
         _params = numpy.zeros(hidden_layers_sizes[-1]+1, dtype=theano.config.floatX)
 
@@ -94,7 +93,7 @@ class MLP(object):
                     high = numpy.sqrt(6. / (n_in + n_out)),
                     size = (n_in+1, n_out)).ravel(), dtype=theano.config.floatX)))
 
-        self.params.length=len(_params)
+        self.params_length=len(_params)
         self.params = theano.shared(_params[::-1], borrow = True)
         self.ReLU_layers = []
 
@@ -156,7 +155,7 @@ class MLP(object):
             self.clogit_Layer = ConditionalLogisticRegression(
                 input=self.ReLU_layers[-1].output,
                 n_in=hidden_layers_sizes[-1],
-                index=index,
+                index=self.index,
                 theta=self.params[-(hidden_layers_sizes[-1]+1):] #这里也可以全部置0
             )
 
@@ -184,22 +183,23 @@ class MLP(object):
         self.errors = self.clogit_Layer.Rsquare(self.index)
 
     def build_cost_gradient_functions(self, datasets, weights_save, batch_size=1500):
+    #构建cg寻优算法要用的三个函数 train_fn, train_grad, callback
 
         train_set_x, train_set_y, train_set_index = datasets[0]
         valid_set_x, valid_set_y, valid_set_index = datasets[1]
         test_set_x, test_set_y, test_set_index = datasets[2]
-
         n_train_batches = (len(numpy.unique(train_set_index.eval()))-1) / batch_size
-        n_valid_batches = (len(numpy.unique(valid_set_index.eval()))-1) / batch_size
-        n_test_batches = (len(numpy.unique(test_set_index.eval()))-1) / batch_size
 
         minibatch = T.lscalar('')  # index to a [mini]batch
+        self.save_weights = weights_save
 
-        self.save_weights=weights_save
+        ##################
+        # build train_fn #
+        ##################
 
         batch_cost = theano.function(
             [minibatch],
-            self.cost, #计算一个起始点开始接下来batch_size个函数的log-liklihood
+            self.cost, #计算在train_data上起始点开始接下来batch_size个函数的log-liklihood
             givens={
                 self.x: train_set_x[train_set_index[minibatch]:train_set_index[minibatch + batch_size]],
                 self.index: train_set_index[minibatch:(minibatch + batch_size + 1)] - train_set_index[minibatch]
@@ -207,7 +207,7 @@ class MLP(object):
             name="batch_cost"
         )
 
-        #根据上面提供的cost计算gradient
+        #根据上面提供的train set上的cost计算gradient
         batch_grad = theano.function(
             [minibatch],
             T.grad(self.cost, self.params),
@@ -233,24 +233,28 @@ class MLP(object):
                 grad += batch_grad(i * batch_size)
             return grad / n_train_batches
 
+        ##################
+        ## build callback#
+        ##################
+
         # performance R2 on test set
         test_model = theano.function(
-            [minibatch],
+            [],
             self.errors,
             givens={
-                self.x: test_set_x[test_set_index[minibatch]:test_set_index[minibatch + batch_size]],  #因为寻址最后一位找不到
-                self.index: test_set_index[minibatch:(minibatch + batch_size + 1)] - test_set_index[minibatch]
+                self.x: test_set_x,  #因为寻址最后一位找不到
+                self.index: test_set_index
             },
             name='test'
         )
 
         #performance R2 on valid set
         validate_model = theano.function(
-            [minibatch],
+            [],
             self.errors,
             givens={
-                self.x: valid_set_x[valid_set_index[minibatch]:valid_set_index[minibatch + batch_size]],
-                self.index: valid_set_index[minibatch:(minibatch + batch_size + 1)] - valid_set_index[minibatch]
+                self.x: valid_set_x,
+                self.index: valid_set_index
             },
             name='valid'
         )
@@ -260,17 +264,13 @@ class MLP(object):
 
         def callback(params_value):
             self.params.set_value(params_value, borrow=True)
-            validation_losses = [validate_model(i * batch_size) #计算valid_set上的r suqare
-                                for i in xrange(n_valid_batches)]
-            this_validation_loss = numpy.mean(validation_losses)
+            this_validation_loss = validate_model()
             print('validation R Square %f ' % (1-this_validation_loss,))
 
             if this_validation_loss < self.validation_scores[0]:
 
                 self.validation_scores[0] = this_validation_loss
-                test_losses = [test_model(i * batch_size) #如果效果好就在test set上计算rsquare
-                                for i in xrange(n_test_batches)]
-                self.validation_scores[1] = numpy.mean(test_losses)
+                self.validation_scores[1] = test_model()
 
                 #model最好的时候存权重
                 if not os.path.exists(self.save_weights):
@@ -281,13 +281,14 @@ class MLP(object):
                 weights, bias = self.MLP_show_weights()
                 numpy.savetxt("clogitLayer.csv",numpy.hstack((weights.pop(), bias.pop())),delimiter=",")
                 #记录hidden layer的权重
+
                 for i in xrange(len(weights)):
                     weights_filename=[str(i+1),"_hiddenLayer_W.csv"]
                     bias_filename=[str(i+1),"_hiddenLayer_b.csv"]
                     numpy.savetxt("".join(weights_filename),weights[i],delimiter=",")
                     numpy.savetxt("".join(bias_filename),bias[i],delimiter=",")
 
-        return train_fn, train_fn_grad, callback #train_fn是最外层训练函数的壳子
+        return train_fn, train_fn_grad, callback
 
     def MLP_show_weights(self):
 
@@ -353,29 +354,22 @@ class MLP(object):
 
         return _test_race_prob
 
-
 def train_MLP(dataset, hidden_layers, activation, weights_save ,n_epochs=500, batch_size=100):
 
     datasets = load_data(dataset[0], dataset[1], dataset[2])
 
     train_set_x, train_set_y, train_set_index = datasets[0]
-    valid_set_x, valid_set_y, valid_set_index = datasets[1]
-    test_set_x, test_set_y, test_set_index = datasets[2]
-
-    n_train_batches = (len(numpy.unique(train_set_index.eval()))-1) / batch_size
-    n_valid_batches = (len(numpy.unique(valid_set_index.eval()))-1) / batch_size
-    n_test_batches = (len(numpy.unique(test_set_index.eval()))-1) / batch_size
 
     n_in = train_set_x.shape[1].eval()  # number of features in a horse
 
     numpy_rng = numpy.random.RandomState(89757)
 
-    minibatch = T.lscalar()
-    x = T.matrix()
-    index = T.ivector()
+    # minibatch = T.lscalar()
+    # x = T.matrix()
+    # index = T.ivector()
 
     print '...building the model'
-    classifier = MLP(numpy_rng=numpy_rng, index=index, n_ins=n_in, hidden_layers_sizes=hidden_layers,
+    classifier = MLP(numpy_rng=numpy_rng, n_ins=n_in, hidden_layers_sizes=hidden_layers,
                      activation_function=activation)
 
     train_fn, train_fn_grad, callback = classifier.build_cost_gradient_functions(datasets, weights_save, batch_size)
@@ -385,12 +379,15 @@ def train_MLP(dataset, hidden_layers, activation, weights_save ,n_epochs=500, ba
     start_time = time.clock()
     best_w_b = scipy.optimize.fmin_cg(
         f=train_fn,#存cost
-        x0=numpy.zeros(classifier.params.length, dtype=x.dtype),
+        x0=numpy.zeros(classifier.params_length, dtype=x.dtype),
         fprime=train_fn_grad, #存gradient
         callback=callback,#在train_set上每train一个minibatch后就测试在valid_set上的r2，存一个最好的，测试函数就是这里的callback
         disp=0,
-        maxiter=n_epochs
+        maxiter=n_epochs,
+        full_output=True
     )
+    #在train data上表现最好的参数存在best_w_b[0]里面
+
     end_time = time.clock()
     print(
         (
@@ -399,3 +396,12 @@ def train_MLP(dataset, hidden_layers, activation, weights_save ,n_epochs=500, ba
         )
         % (1-classifier.validation_scores[0] , 1-classifier.validation_scores[1] )
     )
+
+    print >> sys.stderr, ('The code for file ' +
+                          os.path.split(__file__)[1] +
+                          ' ran for %.1fs' % ((end_time - start_time)))
+
+
+if __name__ == '__main__':
+    train_MLP(dataset=['horse_valid.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[256,256], weights_save="../results",
+              n_epochs=50, batch_size=150, activation=T.tanh)

@@ -170,7 +170,7 @@ class ConditionalLogisticRegression(object):
 
         return self.theta.get_value()
 
-def cg_optimization_horse(dataset, n_epochs=50, batch_size=100):
+def cg_optimization_horse(dataset, n_epochs=50, batch_size=100, validating_mode='batch'):
 
     #############
     # LOAD DATA #
@@ -189,7 +189,6 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100):
     n_test_batches = (len(numpy.unique(test_set_index.eval()))-1) / batch_size
 
     n_in = train_set_x.shape[1].eval()  # number of features in a horse
-
     n_out = 1
     ######################
     # BUILD ACTUAL MODEL #
@@ -205,25 +204,49 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100):
     cost = classifier.negative_log_likelihood(index)
 
     #根据一个Minibatch号码，提供一个batchsize多组的sample, 在test数据上计算模型的rsquare，最终的rsquare是batch上rsquare的平均
-    test_model = theano.function(
-        [minibatch],
-        classifier.Rsquare(index), #计算test set上的错误率
-        givens={
-            x: test_set_x[test_set_index[minibatch]:test_set_index[minibatch + batch_size]],  #因为寻址最后一位找不到
-            index: test_set_index[minibatch:(minibatch + batch_size + 1)] - test_set_index[minibatch]
-        },
-        name="test"
-    )
+    if validating_mode == 'batch':
+
+        test_model = theano.function(
+            [minibatch],
+            classifier.Rsquare(index), #计算test set上的错误率
+            givens={
+                x: test_set_x[test_set_index[minibatch]:test_set_index[minibatch + batch_size]],  #因为寻址最后一位找不到
+                index: test_set_index[minibatch:(minibatch + batch_size + 1)] - test_set_index[minibatch]
+            },
+            name="test"
+        )
     #根据一个Minibatch号码，提供一个batchsize多组的sample, 在valid数据上计算模型的rsquare，最终的rsquare是batch上rsquare的平均
-    validate_model = theano.function(
-        [minibatch],
-        classifier.Rsquare(index), #计算validate set上的错误率 R error
-        givens={
-            x: valid_set_x[valid_set_index[minibatch]:valid_set_index[minibatch + batch_size]],
-            index: valid_set_index[minibatch:(minibatch + batch_size + 1)] - valid_set_index[minibatch]
-        },
-        name="validate"
-    )
+        validate_model = theano.function(
+            [minibatch],
+            classifier.Rsquare(index), #计算validate set上的错误率 R error
+            givens={
+                x: valid_set_x[valid_set_index[minibatch]:valid_set_index[minibatch + batch_size]],
+                index: valid_set_index[minibatch:(minibatch + batch_size + 1)] - valid_set_index[minibatch]
+            },
+            name="validate"
+        )
+    elif validating_mode == 'all': #用全部样本计算R2，而不是算每个BATCH然后再平均
+
+        test_model = theano.function(
+            [],
+            classifier.Rsquare(index), #计算test set上的错误率
+            givens={
+                x: test_set_x,  #因为寻址最后一位找不到
+                index: test_set_index
+            },
+            name="test"
+        )
+
+        validate_model = theano.function(
+            [],
+            classifier.Rsquare(index), #计算validate set上的错误率 R error
+            givens={
+                x: valid_set_x,
+                index: valid_set_index
+            },
+            name="validate"
+        )
+
 
     #提供train_set上从Minibatch开始接下去一个batchsize这么多组的赛马sample，计算model在这些比赛上likelihood
     batch_cost = theano.function(
@@ -251,14 +274,14 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100):
     def train_fn(theta_value):
         classifier.theta.set_value(theta_value, borrow=True)
         train_losses = [batch_cost(i * batch_size)
-                        for i in xrange(n_train_batches)] #在所有的batch上计算cost，然后输出均值
+                        for i in xrange(n_train_batches)] #在所有的train batch上计算cost，然后输出均值
         return numpy.mean(train_losses)
 
     # 计算在train_Set的所有batch上的gradient,然后做平均
     def train_fn_grad(theta_value):
         classifier.theta.set_value(theta_value, borrow=True)
         grad = batch_grad(0)
-        for i in xrange(1, n_train_batches): #在batch上累加gradient然后除以batch的个数
+        for i in xrange(1, n_train_batches): #在train batch上累加gradient然后除以batch的个数
             grad += batch_grad(i * batch_size)
         return grad / n_train_batches
 
@@ -269,21 +292,32 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100):
     # 然后计算该模型在validation数据上的rsquare，如果创了记录，那么就在test数据上测试
     def callback(theta_value):
         classifier.theta.set_value(theta_value, borrow=True)
-        validation_losses = [validate_model(i * batch_size) #计算valid_set上的r suqare
-                             for i in xrange(n_valid_batches)]
-        this_validation_loss = numpy.mean(validation_losses)
+
+        if validating_mode=='batch':
+            validation_losses = [validate_model(i * batch_size) #计算valid_set上的r suqare, 平均每个batch
+                                for i in xrange(n_valid_batches)]
+            this_validation_loss = numpy.mean(validation_losses)
+        elif validating_mode=='all':
+            this_validation_loss = validate_model()
+
         print('validation R Square %f ' % (1-this_validation_loss,))
 
         if this_validation_loss < validation_scores[0]:
 
             validation_scores[0] = this_validation_loss
-            test_losses = [test_model(i * batch_size) #如果效果好就在test set上计算rsquare
-                           for i in xrange(n_test_batches)]
-            validation_scores[1] = numpy.mean(test_losses)
+
+            if validating_mode=='batch':
+                test_losses = [test_model(i * batch_size) #如果效果好就在test set上计算rsquare
+                            for i in xrange(n_test_batches)]
+                validation_scores[1] = numpy.mean(test_losses)
+
+            elif validating_mode=='all':
+                validation_scores[1] = test_model()
 
             #model最好的时候存权重
             weights = classifier.show_theta() #get_value之后中间不需要function再过度
             numpy.savetxt("".join(filename), numpy.hstack((weights,1-this_validation_loss)), delimiter=',')
+
     ###############
     # TRAIN MODEL #
     ###############
@@ -292,23 +326,29 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100):
 
     print ("Optimizing using scipy.optimize.fmin_cg...")
     start_time = time.clock()
+    #best_w_b是在train data上表现最好的参数
     best_w_b = scipy.optimize.fmin_cg(
         f=train_fn,#存cost
         x0=numpy.zeros((n_in + 1) * n_out, dtype=x.dtype),
         fprime=train_fn_grad, #存gradient
         callback=callback,#在train_set上每train一个minibatch后就测试在valid_set上的r2，存一个最好的，测试函数就是这里的callback
         disp=0,
-        maxiter=n_epochs
+        maxiter=n_epochs,
+        full_output=True
     )
     end_time = time.clock()
-    print best_w_b
+    #train上最好的params在best_w_b[0]
+    #不能输出R2,1 loglikelihood是平均值，除过batchsize, 2 不知道每个batch里面有多少马
     print(
         (
-            'Optimization complete with best validation score of %f , with '
+            'Optimization complete best R2 Validating data %f , with '
             'test performance %f '
         )
         % (1-validation_scores[0] , 1-validation_scores[1] )
     )
+
+    filename = ["eph", str(n_epochs), "_bs", str(batch_size), '_best_Train.csv']
+    numpy.savetxt("".join(filename), best_w_b[0], delimiter=',')
 
     print >> sys.stderr, ('The code for file ' +
                           os.path.split(__file__)[1] +
@@ -321,6 +361,7 @@ if __name__ == '__main__':
     #     for j in [600,1100]:
     #         cg_optimization_horse(n_epochs=1000, batch_size=i, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'])
 
-    cg_optimization_horse(n_epochs=1000, batch_size=1500, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'])
+    cg_optimization_horse(n_epochs=500, batch_size=1500, dataset=['horse_valid.csv','horse_valid.csv','horse_test.csv'],
+                          validating_mode = 'batch')
 
 
