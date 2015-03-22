@@ -19,6 +19,7 @@ def ReLU(x):
 
 class HiddenLayer(object):
 
+    #一个隐层，初始化W,b,并且告诉输入有输出
     def __init__(self, rng, input, n_in, n_out, W=None, b=None,
                  activation=T.tanh):
 
@@ -67,26 +68,23 @@ class MLP(object):
         activation_function = T.nnet.sigmoid
     ):
 
+        self.n_layers = len(hidden_layers_sizes)
+        self.activation = activation_function
 
+        assert self.n_layers > 0
 
         if not theano_rng:
             theano_rng = RandomStreams(numpy_rng.randint(2 ** 17)) #一个除了89757改变随机的地方
 
         #因为cg算法优化函数的特性，params必须放在一起
         #倒过来构建，先构建顶层conditional logit 的参数
-        self.n_layers = len(hidden_layers_sizes)
-
-        assert self.n_layers > 0
-
         _params = numpy.zeros(hidden_layers_sizes[-1]+1, dtype=theano.config.floatX)
-
         for i in reversed(xrange(self.n_layers)):
 
             if i == 0: #第一个隐层
                 n_in = n_ins
             else:
-                n_in = hidden_layers_sizes[i-1]
-
+                n_in = hidden_layers_sizes[i-1] #输入个数是上一层的输出个数
             n_out = hidden_layers_sizes[i]
             _params = numpy.concatenate((_params, numpy.asarray(numpy_rng.uniform(
                     low = -numpy.sqrt(6. / (n_in + n_out)),
@@ -107,7 +105,7 @@ class MLP(object):
                 layer_input = self.x
                 _nth = 0 #描述该模型的参数在整个params序列里的起始位置
             else:
-                input_size = hidden_layers_sizes[i - 1]
+                input_size = hidden_layers_sizes[i - 1] #上一层的输出
                 layer_input = self.ReLU_layers[-1].output
 
 
@@ -118,7 +116,7 @@ class MLP(object):
                                             n_in=input_size, #上一层的大小
                                             n_out=hidden_layers_sizes[i],
                                             W=self.params[_nth:_nth_end].reshape((input_size,hidden_layers_sizes[i])),
-                                            b=None, #b=None可以让模型自行初始化全0
+                                            b=self.params[_nth_end:(_nth_end+ hidden_layers_sizes[i])],
                                             activation=activation_function)
                 _nth = _nth_end+hidden_layers_sizes[i] #下个模型参数开始的地方
 
@@ -174,7 +172,7 @@ class MLP(object):
             self.clogit_Layer = ConditionalLogisticRegression(
                 input=self.ReLU_layers[-1].output,
                 n_in=hidden_layers_sizes[-1],
-                index=index,
+                index=self.index,
                 theta=shared_clogit_theta
             )
 
@@ -182,7 +180,9 @@ class MLP(object):
 
         self.errors = self.clogit_Layer.Rsquare(self.index)
 
-    def build_cost_gradient_functions(self, datasets, weights_save, batch_size=1500):
+        self.validation_scores=[numpy.inf, 0]
+
+    def build_cost_gradient_functions(self, datasets, batch_size=1500):
     #构建cg寻优算法要用的三个函数 train_fn, train_grad, callback
 
         train_set_x, train_set_y, train_set_index = datasets[0]
@@ -191,7 +191,6 @@ class MLP(object):
         n_train_batches = (len(numpy.unique(train_set_index.eval()))-1) / batch_size
 
         minibatch = T.lscalar('')  # index to a [mini]batch
-        self.save_weights = weights_save
 
         ##################
         # build train_fn #
@@ -234,7 +233,7 @@ class MLP(object):
             return grad / n_train_batches
 
         ##################
-        ## build callback#
+        # build callback #
         ##################
 
         # performance R2 on test set
@@ -242,7 +241,7 @@ class MLP(object):
             [],
             self.errors,
             givens={
-                self.x: test_set_x,  #因为寻址最后一位找不到
+                self.x: test_set_x,
                 self.index: test_set_index
             },
             name='test'
@@ -259,9 +258,6 @@ class MLP(object):
             name='valid'
         )
 
-        self.validation_scores=[numpy.inf, 0]
-
-
         def callback(params_value):
             self.params.set_value(params_value, borrow=True)
             this_validation_loss = validate_model()
@@ -273,16 +269,12 @@ class MLP(object):
                 self.validation_scores[1] = test_model()
 
                 #model最好的时候存权重
-                if not os.path.exists(self.save_weights):
-                    os.makedirs(self.save_weights)
-
-                os.chdir(self.save_weights)
 
                 weights, bias = self.MLP_show_weights()
-                numpy.savetxt("clogitLayer.csv",numpy.hstack((weights.pop(), bias.pop())),delimiter=",")
+                numpy.savetxt("clogitLayer.csv",numpy.hstack((weights[-1].ravel(), bias[-1].ravel())),delimiter=",")
                 #记录hidden layer的权重
 
-                for i in xrange(len(weights)):
+                for i in xrange(len(weights)-1):
                     weights_filename=[str(i+1),"_hiddenLayer_W.csv"]
                     bias_filename=[str(i+1),"_hiddenLayer_b.csv"]
                     numpy.savetxt("".join(weights_filename),weights[i],delimiter=",")
@@ -298,28 +290,28 @@ class MLP(object):
 
         for i in xrange(self.n_layers):
 
-            weights.append(self.ReLU_layers[i].W.get_value())
-            bias.append(self.ReLU_layers[i].b.get_value())
+            weights.append(self.ReLU_layers[i].W.eval())
+            bias.append(self.ReLU_layers[i].b.eval())
 
         #隐层的取完把conditional logit的也取出来
-        weights.append(self.clogit_Layer.W.get_value())
-        bias.append(self.clogit_Layer.b.get_value())
+        weights.append(self.clogit_Layer.W.eval())
+        bias.append(self.clogit_Layer.b.eval())
 
-        return(weights, bias)
+        return weights, bias
 
     def _MLP_show_hiddenlayer_output(self, test_input, i):
         #这个函数用来计算所有隐层的输出，这是一个中间函数
         #input: n*m hidden_w: m*hidden_units hidden_b:hidden_units*1
         if i==0:
-            return T.nnet.sigmoid(T.dot(test_input, self.ReLU_layers[i].W) + self.ReLU_layers[i].b)
+            return self.activation(T.dot(test_input, self.ReLU_layers[i].W) + self.ReLU_layers[i].b)
         else:
-            return T.nnet.sigmoid(T.dot(self._MLP_show_hiddenlayer_output(test_input,i-1),
-                                        self.ReLU_layers[i].W) + self.ReLU_layers[i].b)
+            return self.activation(T.dot(self._MLP_show_hiddenlayer_output(test_input, i-1),
+                                         self.ReLU_layers[i].W) + self.ReLU_layers[i].b)
                                         #这里的layer如果有新的读入会用新的读入
 
     def MLP_test_output(self, test_input, test_index):
 
-        _test_raw_w = T.exp(T.dot(self._MLP_show_hiddenlayer_output(test_input,self.n_layers-1),
+        _test_raw_w = T.exp(T.dot(self._MLP_show_hiddenlayer_output(test_input, self.n_layers-1),
                                   self.clogit_Layer.W) + self.clogit_Layer.b)
 
         def cumsum_within_group(_start, _index, _race):
@@ -354,7 +346,8 @@ class MLP(object):
 
         return _test_race_prob
 
-def train_MLP(dataset, hidden_layers, activation, weights_save ,n_epochs=500, batch_size=100):
+def train_MLP(dataset, hidden_layers, activation, weights_save, n_epochs=500, batch_size=100):
+
 
     datasets = load_data(dataset[0], dataset[1], dataset[2])
 
@@ -364,22 +357,24 @@ def train_MLP(dataset, hidden_layers, activation, weights_save ,n_epochs=500, ba
 
     numpy_rng = numpy.random.RandomState(89757)
 
-    # minibatch = T.lscalar()
-    # x = T.matrix()
-    # index = T.ivector()
+    x = T.matrix()
 
     print '...building the model'
     classifier = MLP(numpy_rng=numpy_rng, n_ins=n_in, hidden_layers_sizes=hidden_layers,
                      activation_function=activation)
 
-    train_fn, train_fn_grad, callback = classifier.build_cost_gradient_functions(datasets, weights_save, batch_size)
+    train_fn, train_fn_grad, callback = classifier.build_cost_gradient_functions(datasets, batch_size)
 
+    if not os.path.exists(weights_save):
+        os.makedirs(weights_save)
+
+    os.chdir(weights_save)
 
     print ("Optimizing using scipy.optimize.fmin_cg...")
     start_time = time.clock()
     best_w_b = scipy.optimize.fmin_cg(
         f=train_fn,#存cost
-        x0=numpy.zeros(classifier.params_length, dtype=x.dtype),
+        x0=numpy.asarray(classifier.params.get_value(), dtype=x.dtype),
         fprime=train_fn_grad, #存gradient
         callback=callback,#在train_set上每train一个minibatch后就测试在valid_set上的r2，存一个最好的，测试函数就是这里的callback
         disp=0,
@@ -391,8 +386,8 @@ def train_MLP(dataset, hidden_layers, activation, weights_save ,n_epochs=500, ba
     end_time = time.clock()
     print(
         (
-            'Optimization complete with best validation score of %f , with '
-            'test performance %f '
+            'Optimization complete with best R2 on validation dataset of %f , with '
+            'R2 on test dataset %f '
         )
         % (1-classifier.validation_scores[0] , 1-classifier.validation_scores[1] )
     )
@@ -401,7 +396,9 @@ def train_MLP(dataset, hidden_layers, activation, weights_save ,n_epochs=500, ba
                           os.path.split(__file__)[1] +
                           ' ran for %.1fs' % ((end_time - start_time)))
 
+    #print ( 'param length: %d' % classifier.params_length )
+
 
 if __name__ == '__main__':
-    train_MLP(dataset=['horse_valid.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[256,256], weights_save="../results",
-              n_epochs=50, batch_size=150, activation=T.tanh)
+    train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[128, 256, 256, 64], weights_save="./results_4_sigmoid",
+              n_epochs=600, batch_size=750, activation=T.nnet.sigmoid)
