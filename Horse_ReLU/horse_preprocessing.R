@@ -55,7 +55,7 @@ f=clogit(case ~ tocc + tocc:education + strata(id), logan2)
 #take out the R square
 
 library(gsubfn)
-result_folder='./results_batch/'
+result_folder='./result_batch_hpc/'
 resultfiles=list.files(result_folder)
 best_param=data.frame(r2=0,batch=0,epoch=0)
 for (i in 1:length(resultfiles)) {

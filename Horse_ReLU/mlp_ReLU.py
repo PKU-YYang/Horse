@@ -62,6 +62,8 @@ class MLP(object):
         numpy_rng,
         theano_rng=None,
         n_ins=784,
+        L1_reg=0.001,
+        L2_reg=0.0001,
         hidden_layers_sizes = [500, 500],
         clogit_weights_file = None,
         hiddenLayer_weights_file = None, hiddenLayer_bias_file = None,
@@ -176,9 +178,13 @@ class MLP(object):
                 theta=shared_clogit_theta
             )
 
-        self.cost = self.clogit_Layer.negative_log_likelihood(self.index)
+        self.L1 = abs(self.params.ravel()).sum()
 
-        self.errors = self.clogit_Layer.Rsquare(self.index)
+        self.L2 = (self.params.ravel() ** 2).sum()
+
+        self.cost = self.clogit_Layer.negative_log_likelihood(self.index) + L1_reg * self.L1 + L2_reg * self.L2
+
+        self.r_error = self.clogit_Layer.Rsquare(self.index)
 
         self.validation_scores=[numpy.inf, 0]
 
@@ -203,7 +209,8 @@ class MLP(object):
                 self.x: train_set_x[train_set_index[minibatch]:train_set_index[minibatch + batch_size]],
                 self.index: train_set_index[minibatch:(minibatch + batch_size + 1)] - train_set_index[minibatch]
             },
-            name="batch_cost"
+            name="batch_cost",
+            allow_input_downcast=True
         )
 
         #根据上面提供的train set上的cost计算gradient
@@ -214,19 +221,21 @@ class MLP(object):
                 self.x: train_set_x[train_set_index[minibatch]:train_set_index[minibatch + batch_size]],
                 self.index: train_set_index[minibatch:(minibatch + batch_size + 1)] - train_set_index[minibatch]
             },
-            name="batch_grad"
+            name="batch_grad",
+            allow_input_downcast=True
+
         )
 
         #调用batch_cost 在所有train set的batch上计算cost，然后输出均值
         def train_fn(params_value):
-            self.params.set_value(params_value, borrow=True)
+            self.params.set_value(numpy.float32(params_value), borrow=True)
             train_losses = [batch_cost(i * batch_size)
                             for i in xrange(n_train_batches)]
             return numpy.mean(train_losses)
 
         #调用batch_grad 在train_set的batch上累加gradient然后除以batch的个数
         def train_fn_grad(params_value):
-            self.params.set_value(params_value, borrow=True)
+            self.params.set_value(numpy.float32(params_value), borrow=True)
             grad = batch_grad(0)
             for i in xrange(1, n_train_batches):
                 grad += batch_grad(i * batch_size)
@@ -236,36 +245,56 @@ class MLP(object):
         # build callback #
         ##################
 
+        # performance R2 on train set
+        train_model = theano.function(
+            [],
+            self.r_error,
+            givens={
+                self.x: train_set_x,
+                self.index: train_set_index
+            },
+            name='train',
+            allow_input_downcast=True
+        )
+
         # performance R2 on test set
         test_model = theano.function(
             [],
-            self.errors,
+            self.r_error,
             givens={
                 self.x: test_set_x,
                 self.index: test_set_index
             },
-            name='test'
+            name='test',
+            allow_input_downcast=True
+
         )
 
         #performance R2 on valid set
         validate_model = theano.function(
             [],
-            self.errors,
+            self.r_error,
             givens={
                 self.x: valid_set_x,
                 self.index: valid_set_index
             },
-            name='valid'
+            name='valid',
+            allow_input_downcast=True
         )
 
         def callback(params_value):
-            self.params.set_value(params_value, borrow=True)
+            self.params.set_value(numpy.float32(params_value), borrow=True)
             this_validation_loss = validate_model()
-            print('validation R Square %f ' % (1-this_validation_loss,))
+
+            #为了防止overfitting，必须观测在每次validating的R2创新高的时候train是不是降低了
+            this_train_loss = train_model()
+
+            print('validation R Square %f , training R square %f ' % (1-this_validation_loss, 1-this_train_loss))
 
             if this_validation_loss < self.validation_scores[0]:
 
                 self.validation_scores[0] = this_validation_loss
+
                 self.validation_scores[1] = test_model()
 
                 #model最好的时候存权重
@@ -346,7 +375,7 @@ class MLP(object):
 
         return _test_race_prob
 
-def train_MLP(dataset, hidden_layers, activation, weights_save, n_epochs=500, batch_size=100):
+def train_MLP(dataset, hidden_layers, activation, weights_save, L1_reg, L2_reg,n_epochs=500, batch_size=100):
 
 
     datasets = load_data(dataset[0], dataset[1], dataset[2])
@@ -360,7 +389,7 @@ def train_MLP(dataset, hidden_layers, activation, weights_save, n_epochs=500, ba
     x = T.matrix()
 
     print '...building the model'
-    classifier = MLP(numpy_rng=numpy_rng, n_ins=n_in, hidden_layers_sizes=hidden_layers,
+    classifier = MLP(numpy_rng=numpy_rng, n_ins=n_in, hidden_layers_sizes=hidden_layers, L1_reg=L1_reg, L2_reg=L2_reg,
                      activation_function=activation)
 
     train_fn, train_fn_grad, callback = classifier.build_cost_gradient_functions(datasets, batch_size)
@@ -370,9 +399,9 @@ def train_MLP(dataset, hidden_layers, activation, weights_save, n_epochs=500, ba
 
     os.chdir(weights_save)
 
-    print ("Optimizing using scipy.optimize.fmin_cg...")
+    print ("Optimizing using scipy.optimize.fmin_bfgs...")
     start_time = time.clock()
-    best_w_b = scipy.optimize.fmin_cg(
+    best_w_b = scipy.optimize.fmin_bfgs(
         f=train_fn,#存cost
         x0=numpy.asarray(classifier.params.get_value(), dtype=x.dtype),
         fprime=train_fn_grad, #存gradient
@@ -387,7 +416,7 @@ def train_MLP(dataset, hidden_layers, activation, weights_save, n_epochs=500, ba
     print(
         (
             'Optimization complete with best R2 on validation dataset of %f , with '
-            'R2 on test dataset %f '
+            'R2 on training dataset %f '
         )
         % (1-classifier.validation_scores[0] , 1-classifier.validation_scores[1] )
     )
@@ -396,9 +425,15 @@ def train_MLP(dataset, hidden_layers, activation, weights_save, n_epochs=500, ba
                           os.path.split(__file__)[1] +
                           ' ran for %.1fs' % ((end_time - start_time)))
 
+    os.chdir("../")
     #print ( 'param length: %d' % classifier.params_length )
 
 
 if __name__ == '__main__':
-    train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[128, 256, 256, 64], weights_save="./results_4_sigmoid",
-              n_epochs=600, batch_size=750, activation=T.nnet.sigmoid)
+    # train_MLP(dataset=['horse_train.csv','horse_train.csv','horse_train.csv'], hidden_layers=[256,256], weights_save="./results_2_sigmoid",
+    #           n_epochs=600, batch_size=1500, activation=T.nnet.sigmoid)
+    train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[128], weights_save="./results_2_sigmoid",
+              n_epochs=200, batch_size=1460, L1_reg=0., L2_reg=0.0002, activation=T.nnet.sigmoid)
+
+    # train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[1024, 1024], weights_save="./results_2_sigmoid",
+    #           n_epochs=500, batch_size=750, L1_reg=0., L2_reg=0., activation=T.nnet.sigmoid)

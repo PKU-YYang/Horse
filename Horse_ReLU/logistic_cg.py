@@ -66,6 +66,7 @@ class ConditionalLogisticRegression(object):
                 value=numpy.zeros(
                 n_in * n_out + n_out,
                 dtype=theano.config.floatX
+                #dtype='float32'
                 ),
                 name='theta',
                 borrow=True
@@ -196,7 +197,7 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100, validating_mode=
     print '... building the model'
 
     minibatch = T.lscalar()
-    x = T.matrix()
+    x = T.matrix(dtype='float32')
     index = T.ivector()
 
     #用symbol构建出model的类
@@ -213,7 +214,8 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100, validating_mode=
                 x: test_set_x[test_set_index[minibatch]:test_set_index[minibatch + batch_size]],  #因为寻址最后一位找不到
                 index: test_set_index[minibatch:(minibatch + batch_size + 1)] - test_set_index[minibatch]
             },
-            name="test"
+            name="test",
+            allow_input_downcast=True
         )
     #根据一个Minibatch号码，提供一个batchsize多组的sample, 在valid数据上计算模型的rsquare，最终的rsquare是batch上rsquare的平均
         validate_model = theano.function(
@@ -223,9 +225,33 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100, validating_mode=
                 x: valid_set_x[valid_set_index[minibatch]:valid_set_index[minibatch + batch_size]],
                 index: valid_set_index[minibatch:(minibatch + batch_size + 1)] - valid_set_index[minibatch]
             },
-            name="validate"
+            name="validate",
+            allow_input_downcast=True
         )
+
+        train_model = theano.function(
+            [minibatch],
+            classifier.Rsquare(index), #计算validate set上的错误率 R error
+            givens={
+                x: train_set_x[train_set_index[minibatch]:train_set_index[minibatch + batch_size]],
+                index: train_set_index[minibatch:(minibatch + batch_size + 1)] - train_set_index[minibatch]
+            },
+            name="train",
+            allow_input_downcast=True
+        )
+
     elif validating_mode == 'all': #用全部样本计算R2，而不是算每个BATCH然后再平均
+
+        train_model = theano.function(
+            [],
+            classifier.Rsquare(index),
+            givens={
+                x: train_set_x,
+                index: train_set_index
+            },
+            name='train',
+            allow_input_downcast=True
+        )
 
         test_model = theano.function(
             [],
@@ -234,7 +260,8 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100, validating_mode=
                 x: test_set_x,  #因为寻址最后一位找不到
                 index: test_set_index
             },
-            name="test"
+            name="test",
+            allow_input_downcast=True
         )
 
         validate_model = theano.function(
@@ -244,7 +271,8 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100, validating_mode=
                 x: valid_set_x,
                 index: valid_set_index
             },
-            name="validate"
+            name="validate",
+            allow_input_downcast=True
         )
 
 
@@ -256,7 +284,8 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100, validating_mode=
             x: train_set_x[train_set_index[minibatch]:train_set_index[minibatch + batch_size]],
             index: train_set_index[minibatch:(minibatch + batch_size + 1)] - train_set_index[minibatch]
         },
-        name="batch_cost"
+        name="batch_cost",
+        allow_input_downcast=True
     )
 
     #根据上面提供的cost计算gradient
@@ -267,19 +296,20 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100, validating_mode=
             x: train_set_x[train_set_index[minibatch]:train_set_index[minibatch + batch_size]],
             index: train_set_index[minibatch:(minibatch + batch_size + 1)] - train_set_index[minibatch]
         },
-        name="batch_grad"
+        name="batch_grad",
+        allow_input_downcast=True
     )
 
     # 计算train_set数据上的cost, loop所有的batch，最后cost按平均值算
     def train_fn(theta_value):
-        classifier.theta.set_value(theta_value, borrow=True)
+        classifier.theta.set_value(numpy.float32(theta_value), borrow=True)
         train_losses = [batch_cost(i * batch_size)
                         for i in xrange(n_train_batches)] #在所有的train batch上计算cost，然后输出均值
         return numpy.mean(train_losses)
 
     # 计算在train_Set的所有batch上的gradient,然后做平均
     def train_fn_grad(theta_value):
-        classifier.theta.set_value(theta_value, borrow=True)
+        classifier.theta.set_value(numpy.float32(theta_value), borrow=True)
         grad = batch_grad(0)
         for i in xrange(1, n_train_batches): #在train batch上累加gradient然后除以batch的个数
             grad += batch_grad(i * batch_size)
@@ -291,16 +321,19 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100, validating_mode=
     # 在train_set的每个batch的赛事输入以后，计算当前在train_set上的cost和下一步的gradient
     # 然后计算该模型在validation数据上的rsquare，如果创了记录，那么就在test数据上测试
     def callback(theta_value):
-        classifier.theta.set_value(theta_value, borrow=True)
+        classifier.theta.set_value(numpy.float32(theta_value), borrow=True)
 
         if validating_mode=='batch':
             validation_losses = [validate_model(i * batch_size) #计算valid_set上的r suqare, 平均每个batch
                                 for i in xrange(n_valid_batches)]
             this_validation_loss = numpy.mean(validation_losses)
+            train_losses = [train_model(i * batch_size) #计算valid_set上的r suqare, 平均每个batch
+                                for i in xrange(n_train_batches)]
+            this_train_loss = numpy.mean(train_losses)
         elif validating_mode=='all':
             this_validation_loss = validate_model()
-
-        print('validation R Square %f ' % (1-this_validation_loss,))
+            this_train_loss = train_model()
+        print('validation R Square %f , train R square %f ' % (1-this_validation_loss, 1-this_train_loss))
 
         if this_validation_loss < validation_scores[0]:
 
@@ -316,7 +349,9 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100, validating_mode=
 
             #model最好的时候存权重
             weights = classifier.show_theta() #get_value之后中间不需要function再过度
-            numpy.savetxt("".join(filename), numpy.hstack((weights,1-this_validation_loss)), delimiter=',')
+            numpy.savetxt("".join(filename), numpy.hstack((weights, 1-validation_scores[0])), delimiter=',')
+
+
 
     ###############
     # TRAIN MODEL #
@@ -324,10 +359,10 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100, validating_mode=
 
     # using scipy conjugate gradient optimizer
 
-    print ("Optimizing using scipy.optimize.fmin_cg...")
+    print ("Optimizing using scipy.optimize.fmin_bfgs...")
     start_time = time.clock()
     #best_w_b是在train data上表现最好的参数
-    best_w_b = scipy.optimize.fmin_cg(
+    best_w_b = scipy.optimize.fmin_bfgs(
         f=train_fn,#存cost
         x0=numpy.zeros((n_in + 1) * n_out, dtype=x.dtype),
         fprime=train_fn_grad, #存gradient
@@ -339,6 +374,7 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100, validating_mode=
     end_time = time.clock()
     #train上最好的params在best_w_b[0]
     #不能输出R2,1 loglikelihood是平均值，除过batchsize, 2 不知道每个batch里面有多少马
+
     print(
         (
             'Optimization complete best R2 Validating data %f , with '
@@ -347,8 +383,9 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100, validating_mode=
         % (1-validation_scores[0] , 1-validation_scores[1] )
     )
 
-    filename = ["eph", str(n_epochs), "_bs", str(batch_size), '_best_Train.csv']
-    numpy.savetxt("".join(filename), best_w_b[0], delimiter=',')
+    #存train data上的最好结果
+    #filename = ["eph", str(n_epochs), "_bs", str(batch_size), '_best_Train.csv']
+    #numpy.savetxt("".join(filename), best_w_b[0], delimiter=',')
 
     print >> sys.stderr, ('The code for file ' +
                           os.path.split(__file__)[1] +
@@ -357,11 +394,59 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100, validating_mode=
 
 if __name__ == '__main__':
 
-    # for i in xrange(750,1600,30):
-    #     for j in [600,1100]:
-    #         cg_optimization_horse(n_epochs=1000, batch_size=i, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'])
+    # delta = 20
+    # end_point = 12760
+    # n_job=11
+    # _t=(end_point-delta)/delta
+    # sep = numpy.linspace(1,_t,n_job+1).astype(int)
+    # sep_delta = (_t-1)/(n_job)
+    #
+    # if sys.argv[1]=='1':
+    #      for i in xrange( sep[int(sys.argv[1])-1]*delta, (sep[int(sys.argv[1])-1]+sep_delta)*delta, delta):
+    #         # cg_optimization_horse(n_epochs=500, batch_size=i, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'],
+    #         #                     validating_mode='all')
+    #         print i
+    # elif sys.argv[1]=='2':
+    #     for i in xrange( sep[int(sys.argv[1])-1]*delta, (sep[int(sys.argv[1])-1]+sep_delta)*delta, delta):
+    #         cg_optimization_horse(n_epochs=500, batch_size=i, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'],
+    #                             validating_mode='all')
+    # elif sys.argv[1]=='3':
+    #     for i in xrange( sep[int(sys.argv[1])-1]*delta, (sep[int(sys.argv[1])-1]+sep_delta)*delta, delta):
+    #         cg_optimization_horse(n_epochs=500, batch_size=i, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'],
+    #                             validating_mode='all')
+    # elif sys.argv[1]=='4':
+    #     for i in xrange( sep[int(sys.argv[1])-1]*delta, (sep[int(sys.argv[1])-1]+sep_delta)*delta, delta):
+    #         cg_optimization_horse(n_epochs=500, batch_size=i, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'],
+    #                             validating_mode='all')
+    # elif sys.argv[1]=='5':
+    #     for i in xrange( sep[int(sys.argv[1])-1]*delta, (sep[int(sys.argv[1])-1]+sep_delta)*delta, delta):
+    #         cg_optimization_horse(n_epochs=500, batch_size=i, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'],
+    #                             validating_mode='all')
+    # elif sys.argv[1]=='6':
+    #     for i in xrange( sep[int(sys.argv[1])-1]*delta, (sep[int(sys.argv[1])-1]+sep_delta)*delta, delta):
+    #         cg_optimization_horse(n_epochs=500, batch_size=i, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'],
+    #                             validating_mode='all')
+    # elif sys.argv[1]=='7':
+    #     for i in xrange( sep[int(sys.argv[1])-1]*delta, (sep[int(sys.argv[1])-1]+sep_delta)*delta, delta):
+    #         cg_optimization_horse(n_epochs=500, batch_size=i, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'],
+    #                             validating_mode='all')
+    # elif sys.argv[1]=='8':
+    #     for i in xrange( sep[int(sys.argv[1])-1]*delta, (sep[int(sys.argv[1])-1]+sep_delta)*delta, delta):
+    #         cg_optimization_horse(n_epochs=500, batch_size=i, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'],
+    #                             validating_mode='all')
+    # elif sys.argv[1]=='9':
+    #     for i in xrange( sep[int(sys.argv[1])-1]*delta, (sep[int(sys.argv[1])-1]+sep_delta)*delta, delta):
+    #         cg_optimization_horse(n_epochs=500, batch_size=i, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'],
+    #                             validating_mode='all')
+    # elif sys.argv[1]=='10':
+    #     for i in xrange( sep[int(sys.argv[1])-1]*delta, (sep[int(sys.argv[1])-1]+sep_delta)*delta, delta):
+    #         cg_optimization_horse(n_epochs=500, batch_size=i, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'],
+    #                             validating_mode='all')
+    # elif sys.argv[1]=='11':
+    #     for i in xrange( sep[int(sys.argv[1])-1]*delta, (sep[int(sys.argv[1])-1]+sep_delta)*delta, delta):
+    #         cg_optimization_horse(n_epochs=500, batch_size=i, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'],
+    #                             validating_mode='all')
+            #print i
 
-    cg_optimization_horse(n_epochs=500, batch_size=1500, dataset=['horse_valid.csv','horse_valid.csv','horse_test.csv'],
-                          validating_mode = 'batch')
-
-
+    cg_optimization_horse(n_epochs=500, batch_size=1460, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'],
+                          validating_mode='all')
