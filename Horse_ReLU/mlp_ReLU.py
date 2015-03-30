@@ -188,6 +188,10 @@ class MLP(object):
 
         self.validation_scores=[numpy.inf, 0]
 
+        self.best_w = [None,0]
+
+        self.best_b = [None,0]
+
     def build_cost_gradient_functions(self, datasets, batch_size=1500):
     #构建cg寻优算法要用的三个函数 train_fn, train_grad, callback
 
@@ -295,19 +299,13 @@ class MLP(object):
 
                 self.validation_scores[0] = this_validation_loss
 
-                self.validation_scores[1] = test_model()
+                #因为test和valid都是一样的数据，所以先关闭这个功能
+                #self.validation_scores[1] = test_model()
 
                 #model最好的时候存权重
 
-                weights, bias = self.MLP_show_weights()
-                numpy.savetxt("clogitLayer.csv",numpy.hstack((weights[-1].ravel(), bias[-1].ravel())),delimiter=",")
-                #记录hidden layer的权重
+                self.best_w[0], self.best_b[0] = self.MLP_show_weights()
 
-                for i in xrange(len(weights)-1):
-                    weights_filename=[str(i+1),"_hiddenLayer_W.csv"]
-                    bias_filename=[str(i+1),"_hiddenLayer_b.csv"]
-                    numpy.savetxt("".join(weights_filename),weights[i],delimiter=",")
-                    numpy.savetxt("".join(bias_filename),bias[i],delimiter=",")
 
         return train_fn, train_fn_grad, callback
 
@@ -413,6 +411,20 @@ def train_MLP(dataset, hidden_layers, activation, weights_save, L1_reg, L2_reg,n
     #在train data上表现最好的参数存在best_w_b[0]里面
 
     end_time = time.clock()
+
+    weights=classifier.best_w[0]
+    bias=classifier.best_b[0]
+
+    #在最外面存结果，节约时间
+    numpy.savetxt("clogitLayer.csv",numpy.hstack((weights[-1].ravel(), bias[-1].ravel())),delimiter=",")
+
+    for i in xrange(len(weights)-1):
+        weights_filename=[str(i+1),"_hiddenLayer_W.csv"]
+        bias_filename=[str(i+1),"_hiddenLayer_b.csv"]
+        numpy.savetxt("".join(weights_filename),weights[i],delimiter=",")
+        numpy.savetxt("".join(bias_filename),bias[i],delimiter=",")
+
+
     print(
         (
             'Optimization complete with best R2 on validation dataset of %f , with '
@@ -432,8 +444,32 @@ def train_MLP(dataset, hidden_layers, activation, weights_save, L1_reg, L2_reg,n
 if __name__ == '__main__':
     # train_MLP(dataset=['horse_train.csv','horse_train.csv','horse_train.csv'], hidden_layers=[256,256], weights_save="./results_2_sigmoid",
     #           n_epochs=600, batch_size=1500, activation=T.nnet.sigmoid)
-    train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[128], weights_save="./results_2_sigmoid",
-              n_epochs=200, batch_size=1460, L1_reg=0., L2_reg=0.0002, activation=T.nnet.sigmoid)
+    # l1=0.00001
+    # for l2 in [0.0001, 0.0002,0.0003, 0.0005, 0.00008]:
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[50,50,50], weights_save="./results_2_sigmoid",
+    #             n_epochs=150, batch_size=1460, L1_reg=l1, L2_reg=l2, activation=ReLU)
+    #     print "l2:",l2
 
-    # train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[1024, 1024], weights_save="./results_2_sigmoid",
-    #           n_epochs=500, batch_size=750, L1_reg=0., L2_reg=0., activation=T.nnet.sigmoid)
+    # l1=0.0001
+    # for l2 in [0.0001, 0.0002,0.0003, 0.0005, 0.00008]:
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[50,50,50], weights_save="./results_2_sigmoid",
+    #             n_epochs=150, batch_size=1460, L1_reg=l1, L2_reg=l2, activation=ReLU)
+    #     print "l2:",l2
+
+
+    # l1=0.00005
+    # for l2 in [0.0001, 0.0002,0.0003, 0.0005, 0.00008]:
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[50,50,50], weights_save="./results_2_sigmoid",
+    #             n_epochs=150, batch_size=1460, L1_reg=l1, L2_reg=l2, activation=ReLU)
+    #     print "l2:",l2
+
+
+    # l1=0.000005
+    # for l2 in [0.0001, 0.0002,0.0003, 0.0005, 0.00008]:
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[50,50,50], weights_save="./results_2_sigmoid",
+    #             n_epochs=150, batch_size=1460, L1_reg=l1, L2_reg=l2, activation=ReLU)
+    #     print "l2:",l2
+
+
+    train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[128], weights_save="./results_new_sigmoid",
+              n_epochs=5, batch_size=750, L1_reg=0., L2_reg=0., activation=T.nnet.sigmoid)

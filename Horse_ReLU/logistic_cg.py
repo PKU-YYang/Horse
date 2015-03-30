@@ -317,7 +317,7 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100, validating_mode=
 
     validation_scores = [numpy.inf, 0] #用来记录在validation和test上的最完美的rsquare
     filename = ["eph", str(n_epochs), "_bs", str(batch_size), '_best.csv']
-
+    best_weights = [None,0] #要存call_back里返回的函数，一定要用python自带的list,不然返回会失败
     # 在train_set的每个batch的赛事输入以后，计算当前在train_set上的cost和下一步的gradient
     # 然后计算该模型在validation数据上的rsquare，如果创了记录，那么就在test数据上测试
     def callback(theta_value):
@@ -339,19 +339,18 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100, validating_mode=
 
             validation_scores[0] = this_validation_loss
 
-            if validating_mode=='batch':
-                test_losses = [test_model(i * batch_size) #如果效果好就在test set上计算rsquare
-                            for i in xrange(n_test_batches)]
-                validation_scores[1] = numpy.mean(test_losses)
-
-            elif validating_mode=='all':
-                validation_scores[1] = test_model()
-
             #model最好的时候存权重
-            weights = classifier.show_theta() #get_value之后中间不需要function再过度
-            numpy.savetxt("".join(filename), numpy.hstack((weights, 1-validation_scores[0])), delimiter=',')
+            best_weights[0] = classifier.show_theta() #get_value之后中间不需要function再过度
+            #print classifier.theta.eval()
 
-
+            #暂时关闭在test set上测试R2的功能，因为test和valid一样，是一份数据
+            # if validating_mode=='batch':
+            #     test_losses = [test_model(i * batch_size) #如果效果好就在test set上计算rsquare
+            #                 for i in xrange(n_test_batches)]
+            #     validation_scores[1] = numpy.mean(test_losses)
+            #
+            # elif validating_mode=='all':
+            #     validation_scores[1] = test_model()
 
     ###############
     # TRAIN MODEL #
@@ -383,7 +382,10 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100, validating_mode=
         % (1-validation_scores[0] , 1-validation_scores[1] )
     )
 
-    #存train data上的最好结果
+    #每次call back存最好的那组结果，但是在函数最外面再出书那个结果，提升速度
+    numpy.savetxt("".join(filename), numpy.hstack((best_weights[0], 1-validation_scores[0])), delimiter=',')
+
+    #关闭功能：存train data上的最好结果的权重
     #filename = ["eph", str(n_epochs), "_bs", str(batch_size), '_best_Train.csv']
     #numpy.savetxt("".join(filename), best_w_b[0], delimiter=',')
 
@@ -448,5 +450,5 @@ if __name__ == '__main__':
     #                             validating_mode='all')
             #print i
 
-    cg_optimization_horse(n_epochs=500, batch_size=1460, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'],
+    cg_optimization_horse(n_epochs=5, batch_size=1460, dataset=['horse_valid.csv','horse_valid.csv','horse_test.csv'],
                           validating_mode='all')
