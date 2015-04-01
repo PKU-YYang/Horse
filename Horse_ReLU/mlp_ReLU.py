@@ -186,7 +186,7 @@ class MLP(object):
 
         self.r_error = self.clogit_Layer.Rsquare(self.index)
 
-        self.validation_scores=[numpy.inf, 0]
+        self.validation_scores=[numpy.inf, 0, 0] #valid test train
 
         self.best_w = [None,0]
 
@@ -298,7 +298,7 @@ class MLP(object):
             if this_validation_loss < self.validation_scores[0]:
 
                 self.validation_scores[0] = this_validation_loss
-
+                self.validation_scores[2] = this_train_loss
                 #因为test和valid都是一样的数据，所以先关闭这个功能
                 #self.validation_scores[1] = test_model()
 
@@ -373,7 +373,7 @@ class MLP(object):
 
         return _test_race_prob
 
-def train_MLP(dataset, hidden_layers, activation, weights_save, L1_reg, L2_reg,n_epochs=500, batch_size=100):
+def train_MLP(dataset, hidden_layers, activation, weights_save, L1_reg, L2_reg,n_epochs=500, batch_size=100, optimization='BFGS'):
 
 
     datasets = load_data(dataset[0], dataset[1], dataset[2])
@@ -397,20 +397,32 @@ def train_MLP(dataset, hidden_layers, activation, weights_save, L1_reg, L2_reg,n
 
     os.chdir(weights_save)
 
-    print ("Optimizing using scipy.optimize.fmin_bfgs...")
-    start_time = time.clock()
-    best_w_b = scipy.optimize.fmin_bfgs(
-        f=train_fn,#存cost
-        x0=numpy.asarray(classifier.params.get_value(), dtype=x.dtype),
-        fprime=train_fn_grad, #存gradient
-        callback=callback,#在train_set上每train一个minibatch后就测试在valid_set上的r2，存一个最好的，测试函数就是这里的callback
-        disp=0,
-        maxiter=n_epochs,
-        full_output=True
-    )
-    #在train data上表现最好的参数存在best_w_b[0]里面
+    if optimization=='LBFGS':
+        print ("Optimizing using scipy.optimize.fmin_l-bfgs...")
+        start_time = time.clock()
+        best_w_b = scipy.optimize.fmin_l_bfgs_b(
+            func=train_fn,#存cost
+            x0=numpy.asarray(classifier.params.get_value(), dtype=x.dtype),
+            fprime=train_fn_grad, #存gradient
+            callback=callback,#在train_set上每train一个minibatch后就测试在valid_set上的r2，存一个最好的，测试函数就是这里的callback
+            disp=0,
+            maxiter=n_epochs
+            #在train data上表现最好的参数存在best_w_b[0]里面
+        )
 
-    end_time = time.clock()
+    elif optimization=='BFGS':
+        print ("Optimizing using scipy.optimize.fmin_bfgs...")
+        start_time = time.clock()
+        best_w_b = scipy.optimize.fmin_bfgs(
+            f=train_fn,#存cost
+            x0=numpy.asarray(classifier.params.get_value(), dtype=x.dtype),
+            fprime=train_fn_grad, #存gradient
+            callback=callback,#在train_set上每train一个minibatch后就测试在valid_set上的r2，存一个最好的，测试函数就是这里的callback
+            disp=0,
+            maxiter=n_epochs,
+            full_output=True
+        )
+
 
     weights=classifier.best_w[0]
     bias=classifier.best_b[0]
@@ -430,9 +442,10 @@ def train_MLP(dataset, hidden_layers, activation, weights_save, L1_reg, L2_reg,n
             'Optimization complete with best R2 on validation dataset of %f , with '
             'R2 on training dataset %f '
         )
-        % (1-classifier.validation_scores[0] , 1-classifier.validation_scores[1] )
+        % (1-classifier.validation_scores[0] , 1-classifier.validation_scores[2] )
     )
 
+    end_time = time.clock()
     print >> sys.stderr, ('The code for file ' +
                           os.path.split(__file__)[1] +
                           ' ran for %.1fs' % ((end_time - start_time)))
@@ -471,5 +484,5 @@ if __name__ == '__main__':
     #     print "l2:",l2
 
 
-    train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[128], weights_save="./results_new_sigmoid",
-              n_epochs=5, batch_size=750, L1_reg=0., L2_reg=0., activation=T.nnet.sigmoid)
+    train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[50, 50, 50], weights_save="./results_relu_sigmoid",
+              n_epochs=400, batch_size=1460, L1_reg=0.0001, L2_reg=0.0005, activation=ReLU, optimization='LBFGS')

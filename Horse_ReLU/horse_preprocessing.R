@@ -55,7 +55,7 @@ f=clogit(case ~ tocc + tocc:education + strata(id), logan2)
 #take out the R square
 
 library(gsubfn)
-result_folder='./result_batch_hpc/'
+result_folder='./result_bfgs_batch_hpc/'
 resultfiles=list.files(result_folder)
 best_param=data.frame(r2=0,batch=0,epoch=0)
 for (i in 1:length(resultfiles)) {
@@ -67,7 +67,7 @@ for (i in 1:length(resultfiles)) {
 }
 
 best_param_order=best_param[order(best_param[,1],decreasing=T),]
-
+plot(best_param$batch,best_param$r2,ylim=c(0.1400,0.1404))
 
 
 
