@@ -54,7 +54,7 @@ def load_data(trainset, validset, testset):
 
 class ConditionalLogisticRegression(object):
 
-    def __init__(self, input, n_in, index, theta = None): #input是一个minibatch，单位是一组赛事，不是一个sample
+    def __init__(self, input, n_in, index, theta = None, W=None, b=None): #input是一个minibatch，单位是一组赛事，不是一个sample
 
 
         n_out=1  #对于CL模型来说，并不是每一类构建一个分类平面，一直都只有一个数值,就是每匹马夺冠的概率
@@ -74,8 +74,15 @@ class ConditionalLogisticRegression(object):
         else:
             self.theta = theta
 
-        self.W = self.theta[0:n_in * n_out].reshape((n_in, n_out))
-        self.b = self.theta[n_in * n_out:n_in * n_out + n_out]
+        _W = self.theta[0:n_in * n_out].reshape((n_in, n_out))
+        _b = self.theta[n_in * n_out:n_in * n_out + n_out]
+
+        if W is None:
+            self.W = _W
+            self.b = _b
+        else:
+            self.W = W
+            self.b = b
 
         # 把线性回归的值exp之后再按组归一化就是最后的值
         _raw_w = T.exp(T.dot(input, self.W) + self.b)
@@ -406,13 +413,13 @@ def cg_optimization_horse(dataset, n_epochs=50, batch_size=100, validating_mode=
     #numpy.savetxt("".join(filename), best_w_b[0], delimiter=',')
 
     end_time = time.clock()
-    print >> sys.stderr, ('The code for file ' +
-                          os.path.split(__file__)[1] +
-                          ' ran for %.1fs' % ((end_time - start_time)))
+    print >> sys.stderr, ('The code for file ' + os.path.split(__file__)[1] + ' ran for %.1fs' % ((end_time - start_time)) +
+                            ', with batch_size ' + str(batch_size) + ', best R2 on training %f'
+                            ', on validation %f ' % (1-validation_scores[2] , 1-validation_scores[0] ))
 
 
 if __name__ == '__main__':
-
+    #
     # delta = 20
     # end_point = 12760
     # n_job=11
@@ -456,14 +463,16 @@ if __name__ == '__main__':
     #     for i in xrange( sep[int(sys.argv[1])-1]*delta, (sep[int(sys.argv[1])-1]+sep_delta)*delta, delta):
     #         cg_optimization_horse(n_epochs=150, batch_size=i, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'],
     #                             validating_mode='all')
+    #         print i
     # elif sys.argv[1]=='10':
     #     for i in xrange( sep[int(sys.argv[1])-1]*delta, (sep[int(sys.argv[1])-1]+sep_delta)*delta, delta):
     #         cg_optimization_horse(n_epochs=150, batch_size=i, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'],
     #                             validating_mode='all')
+    #         print i
     # elif sys.argv[1]=='11':
     #     for i in xrange( sep[int(sys.argv[1])-1]*delta, (sep[int(sys.argv[1])-1]+sep_delta)*delta, delta):
     #         cg_optimization_horse(n_epochs=150, batch_size=i, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'],
     #                             validating_mode='all')
 
-    cg_optimization_horse(n_epochs=200, batch_size=9940, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'],
+    cg_optimization_horse(n_epochs=400, batch_size=1, dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'],
                           validating_mode='all',optimization='BFGS')

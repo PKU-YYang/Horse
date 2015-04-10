@@ -19,7 +19,7 @@ def ReLU(x):
 
 class HiddenLayer(object):
 
-    #一个隐层，初始化W,b,并且告诉输入有输出
+    # 一个隐层，初始化W,b,并且告诉输入有输出
     def __init__(self, rng, input, n_in, n_out, W=None, b=None,
                  activation=T.tanh):
 
@@ -46,7 +46,7 @@ class HiddenLayer(object):
 
         self.W = W
         self.b = b
-        #hidden layer的输出是连续数值，在0,1之间
+        # hidden layer的输出是连续数值，在0,1之间
         lin_output = T.dot(input, self.W) + self.b
         self.output = (
             lin_output if activation is None
@@ -54,6 +54,24 @@ class HiddenLayer(object):
         )
 
         self.params = [self.W, self.b]
+
+def _dropout_from_layer(rng, layer, p):
+    # p 是丢掉的概率
+    srng = theano.tensor.shared_randomstreams.RandomStreams(
+            rng.randint(89757))
+
+    mask = srng.binomial(n=1, p=1-p, size=layer.shape)
+    output = layer * T.cast(mask, theano.config.floatX)
+
+    return output
+
+class DropoutHiddenLayer(HiddenLayer):
+    def __init__(self, rng, input, n_in, n_out, W = None, b = None,
+                 activation=T.tanh):
+        super(DropoutHiddenLayer, self).__init__(
+              rng=rng, input=input, n_in=n_in, n_out=n_out, W=W, b=b,
+              activation=activation)
+
 
 class MLP(object):
 
@@ -64,7 +82,7 @@ class MLP(object):
         n_ins=784,
         L1_reg=0.001,
         L2_reg=0.0001,
-        hidden_layers_sizes = [500, 500],
+        hidden_layers_sizes = None,
         clogit_weights_file = None,
         hiddenLayer_weights_file = None, hiddenLayer_bias_file = None,
         activation_function = T.nnet.sigmoid
@@ -446,10 +464,9 @@ def train_MLP(dataset, hidden_layers, activation, weights_save, L1_reg, L2_reg,n
     )
 
     end_time = time.clock()
-    print >> sys.stderr, ('The code for file ' +
-                          os.path.split(__file__)[1] +
-                          ' ran for %.1fs' % ((end_time - start_time)))
-
+    print >> sys.stderr, ('The code for file ' + os.path.split(__file__)[1] + ' ran for %.1fs' % ((end_time - start_time)) +
+                            ', with hidden layers ' + str(hidden_layers) + ', best R2 on training %f'
+                            ', on validation %f ' % (1-classifier.validation_scores[2] , 1-classifier.validation_scores[0] ))
     os.chdir("../")
     #print ( 'param length: %d' % classifier.params_length )
 
@@ -484,5 +501,5 @@ if __name__ == '__main__':
     #     print "l2:",l2
 
 
-    train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[50, 50, 50], weights_save="./results_relu_sigmoid",
-              n_epochs=400, batch_size=1460, L1_reg=0.0001, L2_reg=0.0005, activation=ReLU, optimization='LBFGS')
+    train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[7,7], weights_save="./results_relu_sigmoid",
+              n_epochs=350, batch_size=1, L1_reg=0., L2_reg=0.0000, activation=ReLU, optimization='LBFGS')
