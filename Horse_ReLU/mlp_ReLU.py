@@ -1,6 +1,6 @@
 #-*- encoding:utf-8 -*-
 __author__ = 'Yang'
-
+# 在clogit 前面加普通的隐层，然后用bfgs/lbfgs
 
 import os
 import sys

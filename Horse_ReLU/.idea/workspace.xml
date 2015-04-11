@@ -40,8 +40,8 @@
       <file leaf-file-name="logistic_cg.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/logistic_cg.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="3" max-vertical-offset="4830">
-              <caret line="54" column="0" selection-start-line="54" selection-start-column="0" selection-end-line="178" selection-end-column="37" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="3665" max-vertical-offset="4830">
+              <caret line="429" column="26" selection-start-line="429" selection-start-column="6" selection-end-line="429" selection-end-column="26" />
               <folding>
                 <element signature="e#63#72#0" expanded="true" />
                 <element signature="e#255#1976#0" expanded="false" />
@@ -54,14 +54,14 @@
       <file leaf-file-name="mlp_ReLU.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/mlp_ReLU.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="240" max-vertical-offset="6780">
-              <caret line="217" column="60" selection-start-line="216" selection-start-column="8" selection-end-line="217" selection-end-column="60" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="30" max-vertical-offset="6780">
+              <caret line="2" column="32" selection-start-line="2" selection-start-column="32" selection-end-line="2" selection-end-column="32" />
               <folding>
-                <element signature="e#46#55#0" expanded="true" />
-                <element signature="e#11622#11970#0" expanded="false" />
-                <element signature="e#12039#12510#0" expanded="false" />
-                <element signature="e#12576#14157#0" expanded="false" />
-                <element signature="e#13557#13696#0" expanded="false" />
+                <element signature="e#78#87#0" expanded="true" />
+                <element signature="e#11654#12002#0" expanded="false" />
+                <element signature="e#12071#12542#0" expanded="false" />
+                <element signature="e#12608#14189#0" expanded="false" />
+                <element signature="e#13589#13728#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -70,30 +70,11 @@
       <file leaf-file-name="mlp_dropout.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/mlp_dropout.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.4473684" vertical-offset="5767" max-vertical-offset="6735">
-              <caret line="544" column="0" selection-start-line="544" selection-start-column="0" selection-end-line="544" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.80686694" vertical-offset="11789" max-vertical-offset="12315">
+              <caret line="811" column="58" selection-start-line="811" selection-start-column="58" selection-end-line="811" selection-end-column="58" />
               <folding>
                 <element signature="e#82#91#0" expanded="true" />
-                <element signature="e#4865#5950#0" expanded="false" />
-                <element signature="e#6016#6250#0" expanded="false" />
-                <element signature="e#6327#6680#0" expanded="false" />
-                <element signature="e#13090#13564#0" expanded="false" />
-                <element signature="e#13630#15211#0" expanded="false" />
-                <marker date="1428701961000" expanded="false" signature="9100:10576" placeholder="..." />
-                <marker date="1428701961000" expanded="true" signature="9119:10576" placeholder="..." />
-                <marker date="1428701961000" expanded="false" signature="11359:12082" placeholder="..." />
-                <marker date="1428701961000" expanded="true" signature="16721:17239" placeholder="..." />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="function_module.py" pinned="false" current-in-tab="false">
-        <entry file="file://$USER_HOME$/PycharmProjects/theano0.7rc/Theano/theano/compile/function_module.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="6963" max-vertical-offset="23745">
-              <caret line="493" column="0" selection-start-line="493" selection-start-column="0" selection-end-line="493" selection-end-column="0" />
-              <folding />
             </state>
           </provider>
         </entry>
@@ -112,16 +93,16 @@
         <option value="$PROJECT_DIR$/SdA.py" />
         <option value="$PROJECT_DIR$/test.py" />
         <option value="$PROJECT_DIR$/vartest.py" />
-        <option value="$PROJECT_DIR$/mlp_ReLU.py" />
         <option value="$PROJECT_DIR$/logistic_cg.py" />
+        <option value="$PROJECT_DIR$/mlp_ReLU.py" />
         <option value="$PROJECT_DIR$/mlp_dropout.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="49" />
+    <option name="x" value="47" />
     <option name="y" value="23" />
-    <option name="width" value="1391" />
+    <option name="width" value="1393" />
     <option name="height" value="877" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
@@ -437,28 +418,28 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="49" y="23" width="1391" height="877" extended-state="6" />
+    <frame x="47" y="23" width="1393" height="877" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32908162" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33247423" sideWeight="0.5007342" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.07653061" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33163264" sideWeight="0.4992658" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32908162" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.41810918" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32908162" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.18877551" sideWeight="0.5005959" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.36479592" sideWeight="0.49940404" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32908162" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39413264" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33163264" sideWeight="0.4992658" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39413264" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
   <component name="Vcs.Log.UiProperties">
@@ -479,7 +460,7 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="47" />
+      <option name="time" value="48" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -922,28 +903,35 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="-11.804878" vertical-offset="10428" max-vertical-offset="10920">
           <caret line="321" column="47" selection-start-line="321" selection-start-column="16" selection-end-line="321" selection-end-column="47" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/PycharmProjects/theano0.7rc/Theano/theano/compile/function_module.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="1.9888111" vertical-offset="5688" max-vertical-offset="23745">
+          <caret line="493" column="0" selection-start-line="493" selection-start-column="0" selection-end-line="493" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/mlp_ReLU.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="3105" max-vertical-offset="6780">
-          <caret line="217" column="60" selection-start-line="216" selection-start-column="8" selection-end-line="217" selection-end-column="60" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="6780">
+          <caret line="2" column="32" selection-start-line="2" selection-start-column="32" selection-end-line="2" selection-end-column="32" />
           <folding>
-            <element signature="e#46#55#0" expanded="true" />
-            <element signature="e#11622#11970#0" expanded="false" />
-            <element signature="e#12039#12510#0" expanded="false" />
-            <element signature="e#12576#14157#0" expanded="false" />
-            <element signature="e#13557#13696#0" expanded="false" />
+            <element signature="e#78#87#0" expanded="true" />
+            <element signature="e#11654#12002#0" expanded="false" />
+            <element signature="e#12071#12542#0" expanded="false" />
+            <element signature="e#12608#14189#0" expanded="false" />
+            <element signature="e#13589#13728#0" expanded="false" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/logistic_cg.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="3" max-vertical-offset="4830">
-          <caret line="54" column="0" selection-start-line="54" selection-start-column="0" selection-end-line="178" selection-end-column="37" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="3665" max-vertical-offset="4830">
+          <caret line="429" column="26" selection-start-line="429" selection-start-column="6" selection-end-line="429" selection-end-column="26" />
           <folding>
             <element signature="e#63#72#0" expanded="true" />
             <element signature="e#255#1976#0" expanded="false" />
@@ -952,29 +940,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/PycharmProjects/theano0.7rc/Theano/theano/compile/function_module.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="6963" max-vertical-offset="23745">
-          <caret line="493" column="0" selection-start-line="493" selection-start-column="0" selection-end-line="493" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/mlp_dropout.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.4473684" vertical-offset="5767" max-vertical-offset="6735">
-          <caret line="544" column="0" selection-start-line="544" selection-start-column="0" selection-end-line="544" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.80686694" vertical-offset="11789" max-vertical-offset="12315">
+          <caret line="811" column="58" selection-start-line="811" selection-start-column="58" selection-end-line="811" selection-end-column="58" />
           <folding>
             <element signature="e#82#91#0" expanded="true" />
-            <element signature="e#4865#5950#0" expanded="false" />
-            <element signature="e#6016#6250#0" expanded="false" />
-            <element signature="e#6327#6680#0" expanded="false" />
-            <element signature="e#13090#13564#0" expanded="false" />
-            <element signature="e#13630#15211#0" expanded="false" />
-            <marker date="1428701961000" expanded="false" signature="9100:10576" placeholder="..." />
-            <marker date="1428701961000" expanded="true" signature="9119:10576" placeholder="..." />
-            <marker date="1428701961000" expanded="false" signature="11359:12082" placeholder="..." />
-            <marker date="1428701961000" expanded="true" signature="16721:17239" placeholder="..." />
           </folding>
         </state>
       </provider>
