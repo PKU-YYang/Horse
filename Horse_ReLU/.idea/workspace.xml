@@ -40,11 +40,10 @@
       <file leaf-file-name="logistic_cg.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/logistic_cg.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="3665" max-vertical-offset="4830">
-              <caret line="429" column="26" selection-start-line="429" selection-start-column="6" selection-end-line="429" selection-end-column="26" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="15" max-vertical-offset="5385">
+              <caret line="18" column="72" selection-start-line="18" selection-start-column="4" selection-end-line="18" selection-end-column="72" />
               <folding>
                 <element signature="e#63#72#0" expanded="true" />
-                <element signature="e#255#1976#0" expanded="false" />
                 <element signature="e#2028#6432#0" expanded="false" />
               </folding>
             </state>
@@ -54,7 +53,7 @@
       <file leaf-file-name="mlp_ReLU.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/mlp_ReLU.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="30" max-vertical-offset="6780">
+            <state vertical-scroll-proportion="0.0" vertical-offset="4754" max-vertical-offset="6780">
               <caret line="2" column="32" selection-start-line="2" selection-start-column="32" selection-end-line="2" selection-end-column="32" />
               <folding>
                 <element signature="e#78#87#0" expanded="true" />
@@ -70,11 +69,9 @@
       <file leaf-file-name="mlp_dropout.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/mlp_dropout.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.80686694" vertical-offset="11789" max-vertical-offset="12315">
-              <caret line="811" column="58" selection-start-line="811" selection-start-column="58" selection-end-line="811" selection-end-column="58" />
-              <folding>
-                <element signature="e#82#91#0" expanded="true" />
-              </folding>
+            <state vertical-scroll-proportion="-8.849786" vertical-offset="12329" max-vertical-offset="13035">
+              <caret line="557" column="7" selection-start-line="557" selection-start-column="7" selection-end-line="557" selection-end-column="7" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -128,6 +125,7 @@
       <sortByType />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -148,7 +146,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -418,17 +415,17 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="47" y="23" width="1393" height="877" extended-state="6" />
+    <frame x="47" y="23" width="1393" height="877" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.41810918" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.22790357" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32908162" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.18877551" sideWeight="0.5005959" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.36479592" sideWeight="0.49940404" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24928367" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32908162" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
@@ -482,7 +479,6 @@
           <caret line="110" column="115" selection-start-line="110" selection-start-column="115" selection-end-line="110" selection-end-column="115" />
           <folding>
             <element signature="e#63#72#0" expanded="true" />
-            <element signature="e#255#1976#0" expanded="false" />
             <element signature="e#2028#6432#0" expanded="false" />
           </folding>
         </state>
@@ -512,7 +508,6 @@
           <caret line="157" column="59" selection-start-line="128" selection-start-column="0" selection-end-line="157" selection-end-column="59" />
           <folding>
             <element signature="e#63#72#0" expanded="true" />
-            <element signature="e#255#1976#0" expanded="false" />
             <element signature="e#2028#6432#0" expanded="false" />
           </folding>
         </state>
@@ -542,7 +537,6 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#63#72#0" expanded="true" />
-            <element signature="e#255#1976#0" expanded="false" />
             <element signature="e#2028#6432#0" expanded="false" />
           </folding>
         </state>
@@ -572,7 +566,6 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#63#72#0" expanded="true" />
-            <element signature="e#255#1976#0" expanded="false" />
             <element signature="e#2028#6432#0" expanded="false" />
           </folding>
         </state>
@@ -602,7 +595,6 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#63#72#0" expanded="true" />
-            <element signature="e#255#1976#0" expanded="false" />
             <element signature="e#2028#6432#0" expanded="false" />
           </folding>
         </state>
@@ -632,7 +624,6 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#63#72#0" expanded="true" />
-            <element signature="e#255#1976#0" expanded="false" />
             <element signature="e#2028#6432#0" expanded="false" />
           </folding>
         </state>
@@ -662,7 +653,6 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#63#72#0" expanded="true" />
-            <element signature="e#255#1976#0" expanded="false" />
             <element signature="e#2028#6432#0" expanded="false" />
           </folding>
         </state>
@@ -692,7 +682,6 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#63#72#0" expanded="true" />
-            <element signature="e#255#1976#0" expanded="false" />
             <element signature="e#2028#6432#0" expanded="false" />
           </folding>
         </state>
@@ -722,7 +711,6 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#63#72#0" expanded="true" />
-            <element signature="e#255#1976#0" expanded="false" />
             <element signature="e#2028#6432#0" expanded="false" />
           </folding>
         </state>
@@ -752,7 +740,6 @@
           <caret line="191" column="0" selection-start-line="191" selection-start-column="0" selection-end-line="191" selection-end-column="0" />
           <folding>
             <element signature="e#63#72#0" expanded="true" />
-            <element signature="e#255#1976#0" expanded="false" />
             <element signature="e#2028#6432#0" expanded="false" />
           </folding>
         </state>
@@ -782,7 +769,6 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#63#72#0" expanded="true" />
-            <element signature="e#255#1976#0" expanded="false" />
             <element signature="e#2028#6432#0" expanded="false" />
           </folding>
         </state>
@@ -805,7 +791,6 @@
           <caret line="196" column="0" selection-start-line="196" selection-start-column="0" selection-end-line="196" selection-end-column="0" />
           <folding>
             <element signature="e#63#72#0" expanded="true" />
-            <element signature="e#255#1976#0" expanded="false" />
             <element signature="e#2028#6432#0" expanded="false" />
           </folding>
         </state>
@@ -910,13 +895,23 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="1.9888111" vertical-offset="5688" max-vertical-offset="23745">
           <caret line="493" column="0" selection-start-line="493" selection-start-column="0" selection-end-line="493" selection-end-column="0" />
-          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/logistic_cg.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="15" max-vertical-offset="5385">
+          <caret line="18" column="72" selection-start-line="18" selection-start-column="4" selection-end-line="18" selection-end-column="72" />
+          <folding>
+            <element signature="e#63#72#0" expanded="true" />
+            <element signature="e#2028#6432#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/mlp_ReLU.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="6780">
+        <state vertical-scroll-proportion="0.0" vertical-offset="4754" max-vertical-offset="6780">
           <caret line="2" column="32" selection-start-line="2" selection-start-column="32" selection-end-line="2" selection-end-column="32" />
           <folding>
             <element signature="e#78#87#0" expanded="true" />
@@ -928,25 +923,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/logistic_cg.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="3665" max-vertical-offset="4830">
-          <caret line="429" column="26" selection-start-line="429" selection-start-column="6" selection-end-line="429" selection-end-column="26" />
-          <folding>
-            <element signature="e#63#72#0" expanded="true" />
-            <element signature="e#255#1976#0" expanded="false" />
-            <element signature="e#2028#6432#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/mlp_dropout.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.80686694" vertical-offset="11789" max-vertical-offset="12315">
-          <caret line="811" column="58" selection-start-line="811" selection-start-column="58" selection-end-line="811" selection-end-column="58" />
-          <folding>
-            <element signature="e#82#91#0" expanded="true" />
-          </folding>
+        <state vertical-scroll-proportion="-8.849786" vertical-offset="12329" max-vertical-offset="13035">
+          <caret line="557" column="7" selection-start-line="557" selection-start-column="7" selection-end-line="557" selection-end-column="7" />
+          <folding />
         </state>
       </provider>
     </entry>
