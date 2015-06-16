@@ -63,8 +63,9 @@ class ConditionalLogisticRegression(object):
                                  sequences=[T.arange(index.shape[0]-1)],
                                  non_sequences=[index, _raw_w])
 
-
-        #构造一个rep(cumsum,times)的序列，目的是直接相除从而得到每匹马的概率
+        # index实际的样子是从0开始每一位记录每组赛事的第一名的位置，也就是每组比赛开始的地方，最后一位是全部输入sample的行数
+        # index在读入的时候被默认做了一步转化，从 [1,1,1,1,2,2,2] 到 [0,4,7]
+        # 构造一个rep(cumsum,times)的序列，目的是直接相除从而得到每匹马的概率
         # _times里存的是每组比赛的马的数量
         self._times, _ = theano.scan(fn=lambda i, index: index[i+1]-index[i],
                                      sequences=[T.arange(index.shape[0]-1)],
@@ -581,294 +582,296 @@ def train_MLP(initial_learning_rate,
 
 if __name__ == '__main__':
 
-    if sys.argv[1] == '1':
+    # 这个cl模型要求输入的比赛第一匹马必须是冠军
 
-        weights_save = "./results_"
-        _save = "".join([weights_save, sys.argv[1]])
-
-        train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[128,128,128],
-                  weights_save=_save,
-                  n_epochs=3000, batch_size=3300, activation=ReLU,
-                  dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5],
-                  initial_learning_rate=1.5, learning_rate_decay=0.9988,
-                  mom_params={"start": 0.5,
-                              "end": 0.99,
-                              "interval": 1400})
-
-    if sys.argv[1] == '2':
-
-        weights_save = "./results_"
-        _save = "".join([weights_save, sys.argv[1]])
-
-        train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[256,256,256],
-                  weights_save=_save,
-                  n_epochs=3000, batch_size=3300, activation=ReLU,
-                  dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5],
-                  initial_learning_rate=1.5, learning_rate_decay=0.9988,
-                  mom_params={"start": 0.5,
-                              "end": 0.99,
-                              "interval": 1400})
-
-    if sys.argv[1] == '3':
-
-        weights_save = "./results_"
-        _save = "".join([weights_save, sys.argv[1]])
-
-        train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[512,512,512],
-                  weights_save=_save,
-                  n_epochs=3000, batch_size=3300, activation=ReLU,
-                  dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5],
-                  initial_learning_rate=1.5, learning_rate_decay=0.9988,
-                  mom_params={"start": 0.5,
-                              "end": 0.99,
-                              "interval": 1400})
-
-
-    if sys.argv[1] == '4':
-
-        weights_save = "./results_"
-        _save = "".join([weights_save, sys.argv[1]])
-
-        train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[1024,1024,1024],
-                  weights_save=_save,
-                  n_epochs=3000, batch_size=3300, activation=ReLU,
-                  dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5],
-                  initial_learning_rate=1.5, learning_rate_decay=0.9988,
-                  mom_params={"start": 0.5,
-                              "end": 0.99,
-                              "interval": 1400})
-
-    if sys.argv[1] == '5':
-
-        weights_save = "./results_"
-        _save = "".join([weights_save, sys.argv[1]])
-
-        train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[128,128,128,128],
-                  weights_save=_save,
-                  n_epochs=3000, batch_size=3300, activation=ReLU,
-                  dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5, 0.5],
-                  initial_learning_rate=2., learning_rate_decay=0.9987,
-                  mom_params={"start": 0.5,
-                              "end": 0.99,
-                              "interval": 1400})
-
-    if sys.argv[1] == '6':
-
-        weights_save = "./results_"
-        _save = "".join([weights_save, sys.argv[1]])
-
-        train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[256]*4,
-                  weights_save=_save,
-                  n_epochs=3000, batch_size=3300, activation=ReLU,
-                  dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5, 0.5],
-                  initial_learning_rate=2., learning_rate_decay=0.9987,
-                  mom_params={"start": 0.5,
-                              "end": 0.99,
-                              "interval": 1400})
-
-    if sys.argv[1] == '7':
-
-        weights_save = "./results_"
-        _save = "".join([weights_save, sys.argv[1]])
-
-        train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[512]*4,
-                  weights_save=_save,
-                  n_epochs=3000, batch_size=3300, activation=ReLU,
-                  dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5,0.5],
-                  initial_learning_rate=2., learning_rate_decay=0.9987,
-                  mom_params={"start": 0.5,
-                              "end": 0.99,
-                              "interval": 1400})
-
-    if sys.argv[1] == '8':
-
-        weights_save = "./results_"
-        _save = "".join([weights_save, sys.argv[1]])
-
-        train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[1024]*4,
-                  weights_save=_save,
-                  n_epochs=3000, batch_size=3300, activation=ReLU,
-                  dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5,0.5],
-                  initial_learning_rate=2., learning_rate_decay=0.9987,
-                  mom_params={"start": 0.5,
-                              "end": 0.99,
-                              "interval": 1400})
-
-    if sys.argv[1] == '9':
-
-        weights_save = "./results_"
-        _save = "".join([weights_save, sys.argv[1]])
-
-        train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[1024]*5,
-                  weights_save=_save,
-                  n_epochs=3000, batch_size=3300, activation=ReLU,
-                  dropout=True, dropout_rates=[0.1, 0.5, 0.5,0.5,0.5,0.5],
-                  initial_learning_rate=2., learning_rate_decay=0.9995,
-                  mom_params={"start": 0.5,
-                              "end": 0.99,
-                              "interval": 1400})
-
-    if sys.argv[1] == '10':
-
-        weights_save = "./results_"
-        _save = "".join([weights_save, sys.argv[1]])
-
-        train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[1024]*6,
-                  weights_save=_save,
-                  n_epochs=3000, batch_size=3300, activation=ReLU,
-                  dropout=True, dropout_rates=[0.1, 0.5, 0.5,0.5,0.5,0.5,0.5],
-                  initial_learning_rate=2., learning_rate_decay=0.9995,
-                  mom_params={"start": 0.5,
-                              "end": 0.99,
-                              "interval": 1400})
-
-    if sys.argv[1] == '11':
-
-        weights_save = "./results_"
-        _save = "".join([weights_save, sys.argv[1]])
-
-        train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[128,128,128],
-                  weights_save=_save,
-                  n_epochs=3000, batch_size=3300, activation=T.nnet.sigmoid,
-                  dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5],
-                  initial_learning_rate=1.5, learning_rate_decay=0.9988,
-                  mom_params={"start": 0.5,
-                              "end": 0.99,
-                              "interval": 1400})
-
-    if sys.argv[1] == '12':
-
-        weights_save = "./results_"
-        _save = "".join([weights_save, sys.argv[1]])
-
-        train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[256,256,256],
-                  weights_save=_save,
-                  n_epochs=3000, batch_size=3300, activation=T.nnet.sigmoid,
-                  dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5],
-                  initial_learning_rate=1.5, learning_rate_decay=0.9988,
-                  mom_params={"start": 0.5,
-                              "end": 0.99,
-                              "interval": 1400})
-
-    if sys.argv[1] == '13':
-
-        weights_save = "./results_"
-        _save = "".join([weights_save, sys.argv[1]])
-
-        train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[512,512,512],
-                  weights_save=_save,
-                  n_epochs=3000, batch_size=3300, activation=T.nnet.sigmoid,
-                  dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5],
-                  initial_learning_rate=1.5, learning_rate_decay=0.9988,
-                  mom_params={"start": 0.5,
-                              "end": 0.99,
-                              "interval": 1400})
-
-
-    if sys.argv[1] == '14':
-
-        weights_save = "./results_"
-        _save = "".join([weights_save, sys.argv[1]])
-
-        train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[1024,1024,1024],
-                  weights_save=_save,
-                  n_epochs=3000, batch_size=3300, activation=T.nnet.sigmoid,
-                  dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5],
-                  initial_learning_rate=1.5, learning_rate_decay=0.9988,
-                  mom_params={"start": 0.5,
-                              "end": 0.99,
-                              "interval": 1400})
-
-    if sys.argv[1] == '15':
-
-        weights_save = "./results_"
-        _save = "".join([weights_save, sys.argv[1]])
-
-        train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[128,128,128,128],
-                  weights_save=_save,
-                  n_epochs=3000, batch_size=3300, activation=T.nnet.sigmoid,
-                  dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5, 0.5],
-                  initial_learning_rate=2., learning_rate_decay=0.9987,
-                  mom_params={"start": 0.5,
-                              "end": 0.99,
-                              "interval": 1400})
-
-    if sys.argv[1] == '16':
-
-        weights_save = "./results_"
-        _save = "".join([weights_save, sys.argv[1]])
-
-        train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[256]*4,
-                  weights_save=_save,
-                  n_epochs=3000, batch_size=3300, activation=T.nnet.sigmoid,
-                  dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5, 0.5],
-                  initial_learning_rate=2., learning_rate_decay=0.9987,
-                  mom_params={"start": 0.5,
-                              "end": 0.99,
-                              "interval": 1400})
-
-    if sys.argv[1] == '17':
-
-        weights_save = "./results_"
-        _save = "".join([weights_save, sys.argv[1]])
-
-        train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[512]*4,
-                  weights_save=_save,
-                  n_epochs=3000, batch_size=3300, activation=T.nnet.sigmoid,
-                  dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5,0.5],
-                  initial_learning_rate=2., learning_rate_decay=0.9987,
-                  mom_params={"start": 0.5,
-                              "end": 0.99,
-                              "interval": 1400})
-
-    if sys.argv[1] == '18':
-
-        weights_save = "./results_"
-        _save = "".join([weights_save, sys.argv[1]])
-
-        train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[1024]*4,
-                  weights_save=_save,
-                  n_epochs=3000, batch_size=3300, activation=T.nnet.sigmoid,
-                  dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5,0.5],
-                  initial_learning_rate=2., learning_rate_decay=0.9987,
-                  mom_params={"start": 0.5,
-                              "end": 0.99,
-                              "interval": 1400})
-
-    if sys.argv[1] == '19':
-
-        weights_save = "./results_"
-        _save = "".join([weights_save, sys.argv[1]])
-
-        train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[1024]*5,
-                  weights_save=_save,
-                  n_epochs=3000, batch_size=3300, activation=T.nnet.sigmoid,
-                  dropout=True, dropout_rates=[0.1, 0.5, 0.5,0.5,0.5,0.5],
-                  initial_learning_rate=2., learning_rate_decay=0.9995,
-                  mom_params={"start": 0.5,
-                              "end": 0.99,
-                              "interval": 1400})
-
-    if sys.argv[1] == '20':
-
-        weights_save = "./results_"
-        _save = "".join([weights_save, sys.argv[1]])
-
-        train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[1024]*6,
-                  weights_save=_save,
-                  n_epochs=3000, batch_size=3300, activation=T.nnet.sigmoid,
-                  dropout=True, dropout_rates=[0.1, 0.5, 0.5,0.5,0.5,0.5,0.5],
-                  initial_learning_rate=2., learning_rate_decay=0.9995,
-                  mom_params={"start": 0.5,
-                              "end": 0.99,
-                              "interval": 1400})
-
+    # if sys.argv[1] == '1':
     #
-    # train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[50,50,50],
-    #           weights_save="./results_",
-    #           n_epochs=1000, batch_size=3300, activation=ReLU,
-    #           dropout=True, dropout_rates=[0.1,0.5],
-    #           initial_learning_rate=.1, learning_rate_decay=0.995,
-    #           mom_params={"start": 0.5,
-    #                       "end": 0.95,
-    #                       "interval": 500})
+    #     weights_save = "./results_"
+    #     _save = "".join([weights_save, sys.argv[1]])
+    #
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[128,128,128],
+    #               weights_save=_save,
+    #               n_epochs=3000, batch_size=3300, activation=ReLU,
+    #               dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5],
+    #               initial_learning_rate=1.5, learning_rate_decay=0.9988,
+    #               mom_params={"start": 0.5,
+    #                           "end": 0.99,
+    #                           "interval": 1400})
+    #
+    # if sys.argv[1] == '2':
+    #
+    #     weights_save = "./results_"
+    #     _save = "".join([weights_save, sys.argv[1]])
+    #
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[256,256,256],
+    #               weights_save=_save,
+    #               n_epochs=3000, batch_size=3300, activation=ReLU,
+    #               dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5],
+    #               initial_learning_rate=1.5, learning_rate_decay=0.9988,
+    #               mom_params={"start": 0.5,
+    #                           "end": 0.99,
+    #                           "interval": 1400})
+    #
+    # if sys.argv[1] == '3':
+    #
+    #     weights_save = "./results_"
+    #     _save = "".join([weights_save, sys.argv[1]])
+    #
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[512,512,512],
+    #               weights_save=_save,
+    #               n_epochs=3000, batch_size=3300, activation=ReLU,
+    #               dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5],
+    #               initial_learning_rate=1.5, learning_rate_decay=0.9988,
+    #               mom_params={"start": 0.5,
+    #                           "end": 0.99,
+    #                           "interval": 1400})
+    #
+    #
+    # if sys.argv[1] == '4':
+    #
+    #     weights_save = "./results_"
+    #     _save = "".join([weights_save, sys.argv[1]])
+    #
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[1024,1024,1024],
+    #               weights_save=_save,
+    #               n_epochs=3000, batch_size=3300, activation=ReLU,
+    #               dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5],
+    #               initial_learning_rate=1.5, learning_rate_decay=0.9988,
+    #               mom_params={"start": 0.5,
+    #                           "end": 0.99,
+    #                           "interval": 1400})
+    #
+    # if sys.argv[1] == '5':
+    #
+    #     weights_save = "./results_"
+    #     _save = "".join([weights_save, sys.argv[1]])
+    #
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[128,128,128,128],
+    #               weights_save=_save,
+    #               n_epochs=3000, batch_size=3300, activation=ReLU,
+    #               dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5, 0.5],
+    #               initial_learning_rate=2., learning_rate_decay=0.9987,
+    #               mom_params={"start": 0.5,
+    #                           "end": 0.99,
+    #                           "interval": 1400})
+    #
+    # if sys.argv[1] == '6':
+    #
+    #     weights_save = "./results_"
+    #     _save = "".join([weights_save, sys.argv[1]])
+    #
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[256]*4,
+    #               weights_save=_save,
+    #               n_epochs=3000, batch_size=3300, activation=ReLU,
+    #               dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5, 0.5],
+    #               initial_learning_rate=2., learning_rate_decay=0.9987,
+    #               mom_params={"start": 0.5,
+    #                           "end": 0.99,
+    #                           "interval": 1400})
+    #
+    # if sys.argv[1] == '7':
+    #
+    #     weights_save = "./results_"
+    #     _save = "".join([weights_save, sys.argv[1]])
+    #
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[512]*4,
+    #               weights_save=_save,
+    #               n_epochs=3000, batch_size=3300, activation=ReLU,
+    #               dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5,0.5],
+    #               initial_learning_rate=2., learning_rate_decay=0.9987,
+    #               mom_params={"start": 0.5,
+    #                           "end": 0.99,
+    #                           "interval": 1400})
+    #
+    # if sys.argv[1] == '8':
+    #
+    #     weights_save = "./results_"
+    #     _save = "".join([weights_save, sys.argv[1]])
+    #
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[1024]*4,
+    #               weights_save=_save,
+    #               n_epochs=3000, batch_size=3300, activation=ReLU,
+    #               dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5,0.5],
+    #               initial_learning_rate=2., learning_rate_decay=0.9987,
+    #               mom_params={"start": 0.5,
+    #                           "end": 0.99,
+    #                           "interval": 1400})
+    #
+    # if sys.argv[1] == '9':
+    #
+    #     weights_save = "./results_"
+    #     _save = "".join([weights_save, sys.argv[1]])
+    #
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[1024]*5,
+    #               weights_save=_save,
+    #               n_epochs=3000, batch_size=3300, activation=ReLU,
+    #               dropout=True, dropout_rates=[0.1, 0.5, 0.5,0.5,0.5,0.5],
+    #               initial_learning_rate=2., learning_rate_decay=0.9995,
+    #               mom_params={"start": 0.5,
+    #                           "end": 0.99,
+    #                           "interval": 1400})
+    #
+    # if sys.argv[1] == '10':
+    #
+    #     weights_save = "./results_"
+    #     _save = "".join([weights_save, sys.argv[1]])
+    #
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[1024]*6,
+    #               weights_save=_save,
+    #               n_epochs=3000, batch_size=3300, activation=ReLU,
+    #               dropout=True, dropout_rates=[0.1, 0.5, 0.5,0.5,0.5,0.5,0.5],
+    #               initial_learning_rate=2., learning_rate_decay=0.9995,
+    #               mom_params={"start": 0.5,
+    #                           "end": 0.99,
+    #                           "interval": 1400})
+    #
+    # if sys.argv[1] == '11':
+    #
+    #     weights_save = "./results_"
+    #     _save = "".join([weights_save, sys.argv[1]])
+    #
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[128,128,128],
+    #               weights_save=_save,
+    #               n_epochs=3000, batch_size=3300, activation=T.nnet.sigmoid,
+    #               dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5],
+    #               initial_learning_rate=1.5, learning_rate_decay=0.9988,
+    #               mom_params={"start": 0.5,
+    #                           "end": 0.99,
+    #                           "interval": 1400})
+    #
+    # if sys.argv[1] == '12':
+    #
+    #     weights_save = "./results_"
+    #     _save = "".join([weights_save, sys.argv[1]])
+    #
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[256,256,256],
+    #               weights_save=_save,
+    #               n_epochs=3000, batch_size=3300, activation=T.nnet.sigmoid,
+    #               dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5],
+    #               initial_learning_rate=1.5, learning_rate_decay=0.9988,
+    #               mom_params={"start": 0.5,
+    #                           "end": 0.99,
+    #                           "interval": 1400})
+    #
+    # if sys.argv[1] == '13':
+    #
+    #     weights_save = "./results_"
+    #     _save = "".join([weights_save, sys.argv[1]])
+    #
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[512,512,512],
+    #               weights_save=_save,
+    #               n_epochs=3000, batch_size=3300, activation=T.nnet.sigmoid,
+    #               dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5],
+    #               initial_learning_rate=1.5, learning_rate_decay=0.9988,
+    #               mom_params={"start": 0.5,
+    #                           "end": 0.99,
+    #                           "interval": 1400})
+    #
+    #
+    # if sys.argv[1] == '14':
+    #
+    #     weights_save = "./results_"
+    #     _save = "".join([weights_save, sys.argv[1]])
+    #
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[1024,1024,1024],
+    #               weights_save=_save,
+    #               n_epochs=3000, batch_size=3300, activation=T.nnet.sigmoid,
+    #               dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5],
+    #               initial_learning_rate=1.5, learning_rate_decay=0.9988,
+    #               mom_params={"start": 0.5,
+    #                           "end": 0.99,
+    #                           "interval": 1400})
+    #
+    # if sys.argv[1] == '15':
+    #
+    #     weights_save = "./results_"
+    #     _save = "".join([weights_save, sys.argv[1]])
+    #
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[128,128,128,128],
+    #               weights_save=_save,
+    #               n_epochs=3000, batch_size=3300, activation=T.nnet.sigmoid,
+    #               dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5, 0.5],
+    #               initial_learning_rate=2., learning_rate_decay=0.9987,
+    #               mom_params={"start": 0.5,
+    #                           "end": 0.99,
+    #                           "interval": 1400})
+    #
+    # if sys.argv[1] == '16':
+    #
+    #     weights_save = "./results_"
+    #     _save = "".join([weights_save, sys.argv[1]])
+    #
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[256]*4,
+    #               weights_save=_save,
+    #               n_epochs=3000, batch_size=3300, activation=T.nnet.sigmoid,
+    #               dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5, 0.5],
+    #               initial_learning_rate=2., learning_rate_decay=0.9987,
+    #               mom_params={"start": 0.5,
+    #                           "end": 0.99,
+    #                           "interval": 1400})
+    #
+    # if sys.argv[1] == '17':
+    #
+    #     weights_save = "./results_"
+    #     _save = "".join([weights_save, sys.argv[1]])
+    #
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[512]*4,
+    #               weights_save=_save,
+    #               n_epochs=3000, batch_size=3300, activation=T.nnet.sigmoid,
+    #               dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5,0.5],
+    #               initial_learning_rate=2., learning_rate_decay=0.9987,
+    #               mom_params={"start": 0.5,
+    #                           "end": 0.99,
+    #                           "interval": 1400})
+    #
+    # if sys.argv[1] == '18':
+    #
+    #     weights_save = "./results_"
+    #     _save = "".join([weights_save, sys.argv[1]])
+    #
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[1024]*4,
+    #               weights_save=_save,
+    #               n_epochs=3000, batch_size=3300, activation=T.nnet.sigmoid,
+    #               dropout=True, dropout_rates=[0.1, 0.5, 0.5, 0.5,0.5],
+    #               initial_learning_rate=2., learning_rate_decay=0.9987,
+    #               mom_params={"start": 0.5,
+    #                           "end": 0.99,
+    #                           "interval": 1400})
+    #
+    # if sys.argv[1] == '19':
+    #
+    #     weights_save = "./results_"
+    #     _save = "".join([weights_save, sys.argv[1]])
+    #
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[1024]*5,
+    #               weights_save=_save,
+    #               n_epochs=3000, batch_size=3300, activation=T.nnet.sigmoid,
+    #               dropout=True, dropout_rates=[0.1, 0.5, 0.5,0.5,0.5,0.5],
+    #               initial_learning_rate=2., learning_rate_decay=0.9995,
+    #               mom_params={"start": 0.5,
+    #                           "end": 0.99,
+    #                           "interval": 1400})
+    #
+    # if sys.argv[1] == '20':
+    #
+    #     weights_save = "./results_"
+    #     _save = "".join([weights_save, sys.argv[1]])
+    #
+    #     train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[1024]*6,
+    #               weights_save=_save,
+    #               n_epochs=3000, batch_size=3300, activation=T.nnet.sigmoid,
+    #               dropout=True, dropout_rates=[0.1, 0.5, 0.5,0.5,0.5,0.5,0.5],
+    #               initial_learning_rate=2., learning_rate_decay=0.9995,
+    #               mom_params={"start": 0.5,
+    #                           "end": 0.99,
+    #                           "interval": 1400})
+
+
+    train_MLP(dataset=['horse_train.csv','horse_valid.csv','horse_test.csv'], hidden_layers=[50,50,50],
+              weights_save="./results_",
+              n_epochs=1000, batch_size=3300, activation=ReLU,
+              dropout=True, dropout_rates=[0.1,0.5,0.5,0.5],
+              initial_learning_rate=.1, learning_rate_decay=0.995,
+              mom_params={"start": 0.5,
+                          "end": 0.95,
+                          "interval": 500})
